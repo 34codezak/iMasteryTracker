@@ -1,41 +1,53 @@
 :root {
   color-scheme: dark;
-  --bg: #0f172a;
-  --bg-muted: #111c32;
-  --surface: rgba(255, 255, 255, 0.08);
-  --surface-strong: rgba(15, 23, 42, 0.92);
-  --surface-card: rgba(15, 23, 42, 0.78);
-  --surface-pop: #1e293b;
-  --text: #e2e8f0;
-  --text-muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-soft: rgba(56, 189, 248, 0.18);
-  --accent-strong: rgba(56, 189, 248, 0.32);
+  --bg: #050505;
+  --bg-muted: #111111;
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-strong: rgba(5, 5, 5, 0.92);
+  --surface-card: rgba(9, 9, 9, 0.82);
+  --surface-pop: #09090b;
+  --text: #fef9c3;
+  --text-muted: #facc15;
+  --accent: #facc15;
+  --accent-soft: rgba(250, 204, 21, 0.18);
+  --accent-strong: rgba(250, 204, 21, 0.32);
   --danger: #f87171;
   --success: #34d399;
-  --border: rgba(148, 163, 184, 0.25);
-  --shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
+  --border: rgba(250, 204, 21, 0.25);
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.42);
   --radius: 18px;
   --font-body: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg-radial-1: rgba(250, 204, 21, 0.18);
+  --bg-radial-2: rgba(202, 138, 4, 0.22);
+  --hero-gradient-start: rgba(7, 7, 7, 0.85);
+  --hero-gradient-end: rgba(250, 204, 21, 0.35);
+  --hero-glow-1: rgba(234, 179, 8, 0.32);
+  --hero-glow-2: rgba(217, 119, 6, 0.26);
 }
 
 :root.theme-light {
   color-scheme: light;
-  --bg: #f3f4f8;
-  --bg-muted: #e6e8f1;
-  --surface: rgba(255, 255, 255, 0.65);
-  --surface-strong: rgba(255, 255, 255, 0.94);
-  --surface-card: rgba(255, 255, 255, 0.82);
+  --bg: #f7fff7;
+  --bg-muted: #e2f6e8;
+  --surface: rgba(255, 255, 255, 0.7);
+  --surface-strong: rgba(255, 255, 255, 0.96);
+  --surface-card: rgba(255, 255, 255, 0.86);
   --surface-pop: #ffffff;
-  --text: #0f172a;
-  --text-muted: #475569;
-  --accent: #0ea5e9;
-  --accent-soft: rgba(14, 165, 233, 0.12);
-  --accent-strong: rgba(14, 165, 233, 0.25);
+  --text: #062814;
+  --text-muted: #15803d;
+  --accent: #22c55e;
+  --accent-soft: rgba(34, 197, 94, 0.12);
+  --accent-strong: rgba(34, 197, 94, 0.28);
   --danger: #dc2626;
-  --success: #059669;
-  --border: rgba(99, 102, 241, 0.18);
+  --success: #16a34a;
+  --border: rgba(34, 197, 94, 0.18);
   --shadow: 0 22px 48px rgba(15, 23, 42, 0.12);
+  --bg-radial-1: rgba(34, 197, 94, 0.16);
+  --bg-radial-2: rgba(22, 163, 74, 0.14);
+  --hero-gradient-start: rgba(255, 255, 255, 0.9);
+  --hero-gradient-end: rgba(34, 197, 94, 0.28);
+  --hero-glow-1: rgba(134, 239, 172, 0.4);
+  --hero-glow-2: rgba(74, 222, 128, 0.26);
 }
 
 * {
@@ -49,8 +61,8 @@ html, body {
 body {
   margin: 0;
   font-family: var(--font-body);
-  background: radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.18), transparent 45%),
-              radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.18), transparent 45%),
+  background: radial-gradient(circle at 0% 0%, var(--bg-radial-1), transparent 45%),
+              radial-gradient(circle at 100% 100%, var(--bg-radial-2), transparent 45%),
               var(--bg);
   color: var(--text);
   line-height: 1.6;
@@ -80,7 +92,7 @@ button, input, textarea, select {
 .hero {
   position: relative;
   backdrop-filter: blur(16px);
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(30, 64, 175, 0.4));
+  background: linear-gradient(135deg, var(--hero-gradient-start), var(--hero-gradient-end));
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.24);
 }
@@ -89,8 +101,8 @@ button, input, textarea, select {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% -10%, rgba(56, 189, 248, 0.35), transparent 45%),
-              radial-gradient(circle at 80% 120%, rgba(14, 165, 233, 0.25), transparent 50%);
+  background: radial-gradient(circle at 20% -10%, var(--hero-glow-1), transparent 45%),
+              radial-gradient(circle at 80% 120%, var(--hero-glow-2), transparent 50%);
   opacity: 0.8;
   pointer-events: none;
 }
