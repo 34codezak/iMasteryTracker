@@ -309,6 +309,11 @@ h1, h2, h3, h4 {
   gap: 0.45rem;
 }
 
+.stream-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
 .stream-meta .due {
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
@@ -385,11 +390,30 @@ h1, h2, h3, h4 {
   transition: border 0.2s ease, background 0.2s ease;
 }
 
+.milestone label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  cursor: pointer;
+}
+
+.milestone label > span {
+  display: grid;
+  gap: 0.1rem;
+}
+
 .milestone input {
   width: 1.05rem;
   height: 1.05rem;
   border-radius: 4px;
   accent-color: var(--accent);
+}
+
+.milestone .icon-btn {
+  margin-left: auto;
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 .milestone.complete {
