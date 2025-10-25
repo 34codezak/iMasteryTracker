@@ -26,6 +26,7 @@
   --font-body: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --bg-radial-1: rgba(250, 204, 21, 0.18);
   --bg-radial-2: rgba(202, 138, 4, 0.22);
+  --bg-overlay: rgba(5, 5, 5, 0.88);
   --hero-gradient-start: rgba(7, 7, 7, 0.85);
   --hero-gradient-end: rgba(250, 204, 21, 0.35);
   --hero-glow-1: rgba(234, 179, 8, 0.32);
@@ -51,6 +52,7 @@
   --shadow: 0 22px 48px rgba(15, 23, 42, 0.12);
   --bg-radial-1: rgba(34, 197, 94, 0.16);
   --bg-radial-2: rgba(22, 163, 74, 0.14);
+  --bg-overlay: rgba(255, 255, 255, 0.82);
   --hero-gradient-start: rgba(255, 255, 255, 0.9);
   --hero-gradient-end: rgba(34, 197, 94, 0.28);
   --hero-glow-1: rgba(134, 239, 172, 0.4);
@@ -73,11 +75,15 @@ html, body {
 }
 
 body {
-  margin: 0;
-  font-family: var(--font-body);
-  background: radial-gradient(circle at 0% 0%, var(--bg-radial-1), transparent 45%),
-              radial-gradient(circle at 100% 100%, var(--bg-radial-2), transparent 45%),
-              var(--bg);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)),
+                    radial-gradient(circle at 0% 0%, var(--bg-radial-1), transparent 45%),
+                    radial-gradient(circle at 100% 100%, var(--bg-radial-2), transparent 45%),
+                    url("assets/progress1.webp");
+  background-size: cover, auto, auto, cover;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  background-position: center, 0 0, 100% 100%, center;
+  background-attachment: fixed;
   color: var(--text);
   line-height: 1.6;
 }
