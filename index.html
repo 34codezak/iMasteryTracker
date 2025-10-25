@@ -3,512 +3,163 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>iMasteryTracker — Single File</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #f4f6f5;
-      --panel: #ffffff;
-      --text: #0b1d14;
-      --muted: #5b6a61;
-      --primary: #196f3d;   /* forest green */
-      --primary-ink: #e9f5ef;
-      --accent: #c0c0c0;    /* silver */
-      --danger: #b00020;
-      --ring-bg: #e6ebe8;
-      --ring-fg: var(--primary);
-      --overlay: rgba(0,0,0,0.24);
-    }
-    :root.dark {
-      --bg: #0c0c0c;
-      --panel: #121212;
-      --text: #f2f2c2;      /* darker yellow-ish */
-      --muted: #bdb58e;
-      --primary: #d4b000;   /* darker yellow */
-      --primary-ink: #3a3300;
-      --accent: #000000;    /* black */
-      --danger: #ff4d4d;
-      --ring-bg: #1f1f1f;
-      --ring-fg: var(--primary);
-      --overlay: rgba(0,0,0,0.38);
-    }
-
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    /* Blurred background image + scrim */
-    .bg {
-      position: fixed; inset: 0;
-      background-image: url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=1600&auto=format&fit=crop');
-      background-size: cover; background-position: center;
-      filter: blur(12px) saturate(1.05);
-      transform: scale(1.05);
-      z-index: -2;
-    }
-    .scrim { position: fixed; inset:0; background: var(--overlay); z-index: -1; }
-
-    .topbar {
-      position: sticky; top: 0; z-index: 10;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0.8rem 1rem; backdrop-filter: blur(6px);
-      background: color-mix(in oklab, var(--bg) 70%, transparent);
-      border-bottom: 1px solid color-mix(in oklab, var(--text) 10%, transparent);
-    }
-    .brand { display: flex; align-items: center; gap: .5rem; font-weight: 800; }
-    .brand span { letter-spacing: 0.2px; }
-
-    .actions { display: flex; gap: .5rem; align-items: center; }
-
-    .btn {
-      appearance: none; border: 1px solid transparent; cursor: pointer;
-      padding: .55rem .8rem; border-radius: 12px; font-weight: 600;
-      background: var(--panel); color: var(--text);
-      transition: transform .12s ease, background .2s ease, opacity .2s ease, box-shadow .2s ease;
-    }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
-    .btn:active { transform: translateY(0); }
-    .btn.primary { background: var(--primary); color: #fff; }
-    .btn.ghost { background: transparent; border-color: color-mix(in oklab, var(--text) 12%, transparent); }
-    .btn.danger { background: var(--danger); color: #fff; }
-    .btn.ghost.danger { color: var(--danger); border-color: color-mix(in oklab, var(--danger) 40%, transparent); }
-    .filelabel { display: inline-flex; align-items:center; gap: .35rem; }
-
-    .container { max-width: 1200px; margin: 1.2rem auto; padding: 0 1rem; }
-
-    .grid {
-      display: grid; gap: 1rem;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    }
-
-    .card {
-      background: color-mix(in oklab, var(--panel) 88%, transparent);
-      border: 1px solid color-mix(in oklab, var(--text) 10%, transparent);
-      border-radius: 16px; padding: 1rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,.06);
-    }
-    .card.subtle { background: color-mix(in oklab, var(--panel) 70%, transparent); }
-
-    .sprint__head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
-    .sprint__title h3 { margin: 0 0 .25rem; }
-    .sprint__meta { font-size: .9rem; color: var(--muted); }
-    .sprint__controls { display: flex; gap: .4rem; }
-
-    .sprint__progress { position: relative; width: 140px; margin: .5rem auto 1rem; }
-    .ring { display: block; width: 140px; height: 140px; }
-    .ring circle { fill: none; stroke-linecap: round; }
-    .ring .bg { stroke: var(--ring-bg); stroke-width: 12; }
-    .ring .fg { stroke: var(--ring-fg); stroke-width: 12; stroke-dasharray: 339.292; stroke-dashoffset: 339.292; transition: stroke-dashoffset .6s ease; }
-    .ring__label { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
-    .ring__label .pct { font-size: 1.4rem; font-weight: 800; }
-    .ring__label small { color: var(--muted); }
-
-    .days { display: grid; gap: .7rem; }
-    .day__head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
-    .checkbox { display: flex; align-items: center; gap: .6rem; font-weight: 600; }
-    .day__title { font-weight: 700; }
-    .day__date { color: var(--muted); font-size: .9rem; }
-    .day__summary { width: 100%; background: transparent; color: var(--text); border: 1px dashed color-mix(in oklab, var(--text) 20%, transparent); border-radius: 12px; padding: .6rem .7rem; }
-    .day__summary:focus { outline: 2px solid color-mix(in oklab, var(--primary) 45%, transparent); }
-
-    /* Modal base (dialog element) */
-    .modal { border: none; padding: 0; background: transparent; }
-    .modal::backdrop { background: rgba(0,0,0,.0); transition: background .25s ease; }
-    .modal[open]::backdrop { background: rgba(0,0,0,.35); }
-    .modal[open] .card { animation: fadeIn .2s ease, scaleIn .2s ease; }
-    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-    @keyframes scaleIn { from { transform: translateY(4px) scale(.98) } to { transform: translateY(0) scale(1) } }
-
-    /* Form rows */
-    .row { display: flex; gap: .8rem; align-items: center; }
-    .row > * { flex: 1 }
-    .row.end { justify-content: flex-end; }
-    label { display: grid; gap: .35rem; font-weight: 600; }
-    input[type="text"], input[type="date"], textarea {
-      border-radius: 12px; border: 1px solid color-mix(in oklab, var(--text) 15%, transparent);
-      padding: .55rem .7rem; background: var(--panel); color: var(--text);
-    }
-
-    /* Accessibility helpers */
-    :focus-visible { outline: 2px solid color-mix(in oklab, var(--primary) 50%, transparent); outline-offset: 2px; }
-  </style>
+  <title>iMasteryTracker — Strategic Learning Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body>
-  <div class="bg"></div>
-  <div class="scrim"></div>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="hero-brand">
+          <div class="brand-mark" aria-label="iMasteryTracker">
+            <svg viewBox="0 0 48 48" role="img" aria-hidden="true">
+              <path fill="currentColor" d="M24 4a20 20 0 1 0 20 20A20 20 0 0 0 24 4Zm0 4a16 16 0 0 1 15.3 11.75l-9.8 3.92A6 6 0 0 0 24 20a6 6 0 0 0-5.5 3.67L8.7 19.75A16 16 0 0 1 24 8Zm0 32a16 16 0 0 1-15.3-11.75l9.8-3.92A6 6 0 0 0 24 28a6 6 0 0 0 5.5-3.67l9.8 3.92A16 16 0 0 1 24 40Z"/>
+            </svg>
+            <span>iMasteryTracker</span>
+          </div>
+          <div class="hero-actions">
+            <button id="themeToggle" class="btn ghost" type="button">Toggle theme</button>
+            <button id="exportBtn" class="btn secondary" type="button">Export</button>
+            <label class="btn secondary" for="importInput">
+              Import
+              <input id="importInput" type="file" accept="application/json" hidden />
+            </label>
+            <button id="resetBtn" class="btn danger" type="button">Reset</button>
+          </div>
+        </div>
+        <div>
+          <h1 class="hero-headline">Design a deliberate practice system that keeps your skill growth visible.</h1>
+          <p class="hero-subtext" id="heroSubtext">
+            Currently guiding two learning streams with six milestones in motion.
+          </p>
+        </div>
+        <div class="hero-metrics">
+          <div class="metric-card" data-stat="streams">
+            <strong>02</strong>
+            <span>Learning streams</span>
+          </div>
+          <div class="metric-card" data-stat="completion">
+            <strong>68%</strong>
+            <span>Milestone momentum</span>
+          </div>
+          <div class="metric-card" data-stat="milestones">
+            <strong>04/06</strong>
+            <span>Milestones secured</span>
+          </div>
+          <div class="metric-card" data-stat="habits">
+            <strong>01</strong>
+            <span>Habits completed today</span>
+          </div>
+        </div>
+      </div>
+    </header>
 
-  <header class="topbar">
-    <div class="brand">
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/>
-      </svg>
-      <span>iMasteryTracker</span>
-    </div>
+    <main class="wrapper">
+      <section class="panel">
+        <div class="section-head">
+          <h2>Learning streams</h2>
+          <div class="action-bar">
+            <button id="newStreamBtn" class="btn primary" type="button">New stream</button>
+          </div>
+        </div>
+        <div id="streamList" class="stream-grid" aria-live="polite"></div>
+      </section>
 
-    <div class="actions">
-      <button id="themeToggle" class="btn ghost" title="Toggle theme">Theme</button>
-      <button id="exportBtn" class="btn ghost" title="Export JSON">Export</button>
-      <label class="btn ghost filelabel" title="Import JSON">
-        Import<input id="importFile" type="file" accept="application/json" hidden />
-      </label>
-      <button id="newSprintBtn" class="btn primary">+ New Sprint</button>
-    </div>
-  </header>
+      <section class="split-panels">
+        <section class="panel">
+          <div class="section-head">
+            <h2>Daily rituals</h2>
+            <span class="chip">Discipline compounds</span>
+          </div>
+          <div id="habitList" class="habit-list" aria-live="polite"></div>
+        </section>
 
-  <main class="container">
-    <section id="sprints" class="grid"></section>
-  </main>
+        <section class="panel">
+          <div class="section-head">
+            <h2>Reflection log</h2>
+            <div class="action-bar">
+              <button id="newJournalBtn" class="btn ghost" type="button">New entry</button>
+            </div>
+          </div>
+          <div id="journalList" class="journal-list" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
 
-  <!-- Create/Edit Sprint Modal -->
-  <dialog id="sprintModal" class="modal">
-    <form method="dialog" class="card" id="sprintForm">
-      <h2 id="sprintModalTitle">New Sprint</h2>
-      <div class="row">
-        <label>Name
-          <input id="sprintName" type="text" placeholder="e.g., Week 42 – Algorithms" required />
+    <footer class="footer">
+      <p><strong>iMasteryTracker</strong> — a personal operating system for focused mastery. Export your data frequently to keep a secure history of growth.</p>
+    </footer>
+  </div>
+
+  <dialog id="streamDialog" class="dialog" aria-labelledby="streamDialogTitle">
+    <form id="streamForm" method="dialog" class="dialog-card">
+      <div>
+        <h2 id="streamDialogTitle">New learning stream</h2>
+        <p class="notice">Each stream anchors one area of deliberate practice.</p>
+      </div>
+      <div class="form-grid">
+        <label>
+          <span>Name</span>
+          <input name="streamName" type="text" placeholder="Example: Interface Storytelling" required />
         </label>
-        <label>Start Date
-          <input id="sprintStart" type="date" required />
+        <label>
+          <span>Focus statement</span>
+          <input name="streamFocus" type="text" placeholder="What skill is this sharpening?" />
+        </label>
+        <label>
+          <span>Target milestone date</span>
+          <input name="streamDate" type="date" value="" />
+        </label>
+        <label>
+          <span>Milestones (one per line)</span>
+          <textarea name="streamMilestones" placeholder="Prototype new interaction language&#10;Publish a learnings digest"></textarea>
+        </label>
+        <label>
+          <span>Working note</span>
+          <textarea name="streamNote" placeholder="Next move once the current milestone lands"></textarea>
         </label>
       </div>
-      <div class="row">
-        <label>Notes (optional)
-          <textarea id="sprintNotes" rows="3" placeholder="Sprint goals, scope, constraints..."></textarea>
-        </label>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" data-dismiss>Cancel</button>
+        <button type="submit" class="btn primary">Create stream</button>
       </div>
-      <menu class="row end">
-        <button value="cancel" class="btn ghost" id="sprintCancel">Cancel</button>
-        <button class="btn primary" id="saveSprintBtn" value="default">Save</button>
-      </menu>
-      <input type="hidden" id="editingSprintId" />
     </form>
   </dialog>
 
-  <!-- Delete Confirm Modal -->
-  <dialog id="confirmModal" class="modal">
-    <form method="dialog" class="card">
-      <h3>Confirm deletion</h3>
-      <p id="confirmText">This action cannot be undone.</p>
-      <menu class="row end">
-        <button value="cancel" class="btn ghost" id="confirmNo">Cancel</button>
-        <button class="btn danger" id="confirmYes" value="default">Delete</button>
-      </menu>
+  <dialog id="journalDialog" class="dialog" aria-labelledby="journalDialogTitle">
+    <form id="journalForm" method="dialog" class="dialog-card">
+      <div>
+        <h2 id="journalDialogTitle">Log a reflection</h2>
+        <p class="notice">Capture what shifted today so future you can trace the arc.</p>
+      </div>
+      <div class="form-grid">
+        <label>
+          <span>Date</span>
+          <input name="journalDate" type="date" value="" />
+        </label>
+        <label>
+          <span>Headline</span>
+          <input name="journalHeadline" type="text" placeholder="What theme emerged?" />
+        </label>
+        <label>
+          <span>Focus</span>
+          <textarea name="journalFocus" placeholder="What did you explore or learn?" rows="3"></textarea>
+        </label>
+        <label>
+          <span>Takeaway</span>
+          <textarea name="journalTakeaways" placeholder="Which insight is worth repeating?" rows="2"></textarea>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn ghost" data-dismiss>Cancel</button>
+        <button type="submit" class="btn primary">Save entry</button>
+      </div>
     </form>
   </dialog>
 
-  <template id="sprintTpl">
-    <article class="sprint card">
-      <header class="sprint__head">
-        <div class="sprint__title">
-          <h3 class="sprint__name"></h3>
-          <div class="sprint__meta"></div>
-        </div>
-        <div class="sprint__controls">
-          <button class="btn ghost edit">Edit</button>
-          <button class="btn ghost danger delete">Delete</button>
-        </div>
-      </header>
-
-      <div class="sprint__progress">
-        <svg viewBox="0 0 120 120" class="ring" aria-hidden="true">
-          <circle class="bg" cx="60" cy="60" r="54" />
-          <circle class="fg" cx="60" cy="60" r="54" />
-        </svg>
-        <div class="ring__label"><span class="pct">0%</span><small>Done</small></div>
-      </div>
-
-      <section class="days"></section>
-    </article>
-  </template>
-
-  <template id="dayTpl">
-    <div class="day card subtle">
-      <header class="day__head">
-        <label class="checkbox">
-          <input type="checkbox" class="day__check" />
-          <span class="day__title">Day</span>
-        </label>
-        <time class="day__date"></time>
-      </header>
-      <textarea class="day__summary" rows="3" placeholder="What’s the plan / what did you do today?"></textarea>
-    </div>
-  </template>
-
-  <script>
-    // iMasteryTracker – vanilla JS state + localStorage
-    (function () {
-      const $ = (sel, ctx = document) => ctx.querySelector(sel);
-      const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
-
-      // Persistent state
-      const STORAGE_KEY = "imastery.state.v1";
-      let state = loadState();
-
-      // Elements
-      const sprintsEl = $("#sprints");
-      const themeToggle = $("#themeToggle");
-      const newSprintBtn = $("#newSprintBtn");
-      const exportBtn = $("#exportBtn");
-      const importFile = $("#importFile");
-
-      const sprintModal = $("#sprintModal");
-      const sprintForm = $("#sprintForm");
-      const sprintName = $("#sprintName");
-      const sprintStart = $("#sprintStart");
-      const sprintNotes = $("#sprintNotes");
-      const editingId = $("#editingSprintId");
-      const sprintModalTitle = $("#sprintModalTitle");
-      const sprintCancel = $("#sprintCancel");
-
-      const confirmModal = $("#confirmModal");
-      const confirmYes = $("#confirmYes");
-      const confirmNo = $("#confirmNo");
-      const confirmText = $("#confirmText");
-
-      // Init
-      applyTheme(state.ui?.theme || preferredTheme());
-      render();
-
-      // Event: theme toggle
-      themeToggle.addEventListener("click", () => {
-        const next = document.documentElement.classList.toggle("dark") ? "dark" : "light";
-        state.ui = { ...(state.ui || {}), theme: next };
-        persist();
-      });
-
-      // Event: new sprint
-      newSprintBtn.addEventListener("click", () => openSprintModal());
-
-      // Export JSON
-      exportBtn.addEventListener("click", () => {
-        const data = JSON.stringify(state, null, 2);
-        const blob = new Blob([data], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = `imastery-export-${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-
-      // Import JSON
-      importFile.addEventListener("change", async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        try {
-          const text = await file.text();
-          const data = JSON.parse(text);
-          if (!data || typeof data !== "object" || !Array.isArray(data.sprints)) throw new Error("Invalid file");
-          state = data; persist(); render();
-        } catch (err) { alert(`Import failed: ${err.message}`); }
-        finally { e.target.value = ""; }
-      });
-
-      // Sprint form submit
-      sprintForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const id = editingId.value || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-        const startDate = new Date(sprintStart.value);
-        if (Number.isNaN(+startDate)) { alert("Invalid start date"); return; }
-
-        const days = buildOrReuseDays(state.sprints.find(s => s.id === id)?.days, startDate);
-
-        const sprint = {
-          id,
-          name: sprintName.value.trim(),
-          start: startDate.toISOString(),
-          notes: sprintNotes.value.trim(),
-          days
-        };
-
-        const existingIdx = state.sprints.findIndex(s => s.id === id);
-        if (existingIdx >= 0) state.sprints[existingIdx] = sprint; else state.sprints.unshift(sprint);
-
-        persist(); render(); closeDialog(sprintModal);
-      });
-
-      // Cancel with animated close
-      sprintCancel.addEventListener("click", (e) => { e.preventDefault(); closeDialog(sprintModal); });
-
-      // Helpers
-      function buildOrReuseDays(existingDays, startDate) {
-        const result = [];
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(startDate); d.setDate(d.getDate() + i);
-          const iso = d.toISOString();
-          const prior = existingDays?.[i];
-          result.push({
-            date: iso,
-            title: `Day ${i + 1}`,
-            done: prior?.done ?? false,
-            summary: prior?.summary ?? ""
-          });
-        }
-        return result;
-      }
-
-      function loadState() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return { sprints: [], ui: {} };
-          const data = JSON.parse(raw);
-          if (!Array.isArray(data.sprints)) return { sprints: [], ui: {} };
-          return data;
-        } catch { return { sprints: [], ui: {} }; }
-      }
-
-      function persist() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      }
-
-      function preferredTheme() {
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-
-      function applyTheme(theme) {
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-      }
-
-      function render() {
-        sprintsEl.innerHTML = "";
-        state.sprints.forEach(s => sprintsEl.appendChild(renderSprint(s)));
-      }
-
-      function renderSprint(sprint) {
-        const tpl = $("#sprintTpl").content.cloneNode(true);
-        const root = tpl.querySelector('.sprint');
-
-        const nameEl = tpl.querySelector('.sprint__name');
-        const metaEl = tpl.querySelector('.sprint__meta');
-        const daysEl = tpl.querySelector('.days');
-
-        nameEl.textContent = sprint.name;
-        const start = new Date(sprint.start);
-        const end = new Date(start); end.setDate(end.getDate() + 6);
-        metaEl.textContent = `${fmtDate(start)} → ${fmtDate(end)}`;
-
-        // Build days
-        daysEl.innerHTML = "";
-        sprint.days.forEach((d, idx) => daysEl.appendChild(renderDay(sprint.id, idx, d)));
-
-        // Progress
-        const pct = calcPct(sprint.days);
-        const pctLabel = tpl.querySelector('.pct');
-        pctLabel.textContent = `${pct}%`;
-        const fg = tpl.querySelector('.ring .fg');
-        const perimeter = 339.292; // 2πr with r=54
-        fg.style.strokeDashoffset = String(perimeter * (1 - pct/100));
-
-        // Controls
-        tpl.querySelector('.edit').addEventListener('click', () => openSprintModal(sprint));
-        tpl.querySelector('.delete').addEventListener('click', () => confirmDeleteSprint(sprint));
-
-        return root;
-      }
-
-      function renderDay(sprintId, index, day) {
-        const tpl = $("#dayTpl").content.cloneNode(true);
-        const root = tpl.querySelector('.day');
-
-        const title = tpl.querySelector('.day__title');
-        const dateEl = tpl.querySelector('.day__date');
-        const check = tpl.querySelector('.day__check');
-        const summary = tpl.querySelector('.day__summary');
-
-        title.textContent = day.title || `Day ${index+1}`;
-        dateEl.textContent = fmtDate(new Date(day.date));
-        check.checked = !!day.done;
-        summary.value = day.summary || "";
-
-        check.addEventListener('change', () => {
-          const s = state.sprints.find(s => s.id === sprintId);
-          if (!s) return;
-          s.days[index].done = check.checked; persist(); rerenderSprintInPlace(sprintId);
-        });
-
-        summary.addEventListener('input', debounce(() => {
-          const s = state.sprints.find(s => s.id === sprintId);
-          if (!s) return;
-          s.days[index].summary = summary.value; persist();
-        }, 250));
-
-        return root;
-      }
-
-      function fmtDate(d) {
-        const opts = { year: 'numeric', month: 'short', day: 'numeric' };
-        return new Intl.DateTimeFormat(undefined, opts).format(d);
-      }
-
-      function calcPct(days) {
-        const total = days.length || 1;
-        const done = days.filter(d => d.done).length;
-        return Math.round((done / total) * 100);
-      }
-
-      function openSprintModal(sprint) {
-        sprintModal.classList.add('is-opening');
-        sprintModal.showModal();
-        requestAnimationFrame(() => sprintModal.classList.remove('is-opening'));
-
-        if (sprint) {
-          sprintModalTitle.textContent = 'Edit Sprint';
-          sprintName.value = sprint.name;
-          sprintStart.value = sprint.start.slice(0,10);
-          sprintNotes.value = sprint.notes || '';
-          editingId.value = sprint.id;
-        } else {
-          sprintModalTitle.textContent = 'New Sprint';
-          sprintName.value = '';
-          // Default to today in local tz
-          const today = new Date();
-          const yyyy = today.getFullYear();
-          const mm = String(today.getMonth()+1).padStart(2,'0');
-          const dd = String(today.getDate()).padStart(2,'0');
-          sprintStart.value = `${yyyy}-${mm}-${dd}`;
-          sprintNotes.value = '';
-          editingId.value = '';
-        }
-      }
-
-      function closeDialog(dlg) {
-        // Graceful fade-out
-        dlg.classList.add('is-closing');
-        setTimeout(() => { dlg.close(); dlg.classList.remove('is-closing'); }, 150);
-      }
-
-      sprintModal.addEventListener('click', (e) => { if (e.target === sprintModal) closeDialog(sprintModal); });
-      confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeDialog(confirmModal); });
-
-      function confirmDeleteSprint(sprint) {
-        confirmText.textContent = `Delete sprint “${sprint.name}”? This cannot be undone.`;
-        confirmModal.showModal();
-
-        const onNo = () => { closeDialog(confirmModal); confirmNo.removeEventListener('click', onNo); };
-        confirmNo.addEventListener('click', onNo, { once: true });
-
-        const onYes = () => {
-          state.sprints = state.sprints.filter(s => s.id !== sprint.id);
-          persist(); render(); confirmYes.removeEventListener('click', onYes); closeDialog(confirmModal);
-        };
-        confirmYes.addEventListener('click', onYes, { once: true });
-      }
-
-      function rerenderSprintInPlace(_sprintId) {
-        // Simple and reliable: re-render everything
-        render();
-      }
-
-      function debounce(fn, ms) {
-        let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-      }
-    })();
-  </script>
+  <script type="module" src="./scripts/app.js"></script>
 </body>
 </html>
