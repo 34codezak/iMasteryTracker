@@ -1,0 +1,131 @@
+:root {
+  --bg: #f4f6f5;
+  --panel: #ffffff;
+  --text: #0b1d14;
+  --muted: #5b6a61;
+  --primary: #196f3d;
+  --danger: #b00020;
+  --ring-bg: #e6ebe8;
+  --ring-fg: var(--primary);
+  --overlay: rgba(0,0,0,0.24);
+}
+
+:root.dark {
+  --bg: #0c0c0c;
+  --panel: #121212;
+  --text: #f2f2c2;
+  --muted: #bdb58e;
+  --primary: #d4b000;
+  --danger: #ff4d4d;
+  --ring-bg: #1f1f1f;
+  --ring-fg: var(--primary);
+  --overlay: rgba(0,0,0,0.38);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+}
+
+html {
+  animation: fadeIn 0.6s ease;
+}
+
+.brand {
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-shadow: 0 0 10px var(--primary);
+}
+
+.bg {
+  position: fixed; inset: 0;
+  background: url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=1600&auto=format&fit=crop') center/cover;
+  filter: blur(12px);
+  z-index: -2;
+}
+
+.scrim { position: fixed; inset: 0; background: var(--overlay); z-index: -1; }
+
+.topbar {
+  position: sticky; top: 0;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  margin-top: 1rem;
+}
+
+.card {
+  background: var(--panel);
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+}
+
+.footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+.footer a:hover { text-decoration: underline; }
+
+.ring circle { fill: none; stroke-linecap: round; }
+.ring .bg { stroke: var(--ring-bg); stroke-width: 12; }
+.ring .fg { stroke: var(--ring-fg); stroke-width: 12; stroke-dasharray: 339.292; transition: .6s; }
+.ring__label { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; }
+
+/* --- Animations & Transitions --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+dialog.modal[open] .card {
+  animation: fadeIn 0.25s ease forwards;
+}
+
+dialog.modal.closing .card {
+  animation: fadeOut 0.25s ease forwards;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  transition: opacity 0.25s ease;
+  opacity: 0;
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+}
+
+/* Smooth hover glow for buttons */
+.w3-button {
+  transition: all 0.25s ease;
+}
+
+.w3-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Card fade-in for better page feel */
+.card {
+  animation: fadeIn 0.5s ease;
+}
+
+/* Add slight scaling animation to circular progress */
+.ring .fg {
+  transition: stroke-dashoffset 0.6s ease, transform 0.6s ease;
+  transform-origin: center;
+}
+
+.ring:hover .fg {
+  transform: scale(1.05);
+}
