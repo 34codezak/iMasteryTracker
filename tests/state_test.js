@@ -1,4 +1,4 @@
-import { assertEquals, assertMatch } from "https://deno.land/std@0.225.0/testing/asserts.ts";
+import { assertEquals, assertMatch } from "https://deno.land/std@0.208.0/testing/asserts.ts";
 import { today, offsetDate } from "../scripts/state.js";
 
 Deno.test("today returns an ISO date string", () => {
