@@ -150,15 +150,10 @@ function renderStreamCard(stream) {
         <span class="due">${dueCopy}</span>
         <div class="stream-actions">
           <button class="icon-btn" type="button" data-action="edit-stream" aria-label="Edit ${escapeHtml(stream.name)}">
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 1.42h-.67v-.67l9.86-9.86.67.67-9.86 9.86zm11.79-11.79 1.41-1.41a1 1 0 0 0 0-1.41l-1.83-1.83a1 1 0 0 0-1.41 0l-1.41 1.41 3.24 3.24z" />
-            </svg>
+            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
           </button>
           <button class="icon-btn" type="button" data-action="remove-stream" aria-label="Remove ${escapeHtml(stream.name)}">
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path fill="currentColor" d="M9 9h2v8H9zm4 0h2v8h-2z" opacity="0.6" />
-              <path fill="currentColor" d="M5 6h14v2H5zm2 2h10v12H7z" />
-            </svg>
+            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
           </button>
         </div>
       </div>
@@ -249,9 +244,7 @@ function renderMilestones(stream) {
             </span>
           </label>
           <button class="icon-btn" type="button" data-action="edit-milestone" data-stream="${stream.id}" data-milestone="${milestone.id}" aria-label="Edit deliverable ${escapeHtml(milestone.title)}">
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 1.42h-.67v-.67l9.86-9.86.67.67-9.86 9.86zm11.79-11.79 1.41-1.41a1 1 0 0 0 0-1.41l-1.83-1.83a1 1 0 0 0-1.41 0l-1.41 1.41 3.24 3.24z" />
-            </svg>
+            <i class="fa-solid fa-pen" aria-hidden="true"></i>
           </button>
         </div>
       `;

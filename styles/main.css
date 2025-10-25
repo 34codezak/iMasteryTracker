@@ -159,9 +159,9 @@ button, input, textarea, select {
   font-size: clamp(1.35rem, 2vw, 1.6rem);
 }
 
-.brand-mark svg {
-  width: clamp(2.4rem, 3vw, 3.1rem);
-  height: auto;
+.brand-mark i {
+  font-size: clamp(1.6rem, 2.4vw, 2.6rem);
+  line-height: 1;
   color: var(--accent);
 }
 
@@ -183,6 +183,14 @@ button, input, textarea, select {
   font-weight: 600;
   font-size: 0.85rem;
   letter-spacing: 0.02em;
+}
+
+.chip i[class*="fa-"],
+.chip i.fa-solid,
+.chip i.fa-regular,
+.chip i.fa-brands {
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 h1, h2, h3, h4 {
@@ -220,16 +228,26 @@ h1, h2, h3, h4 {
   border-radius: var(--radius);
   border: 1px solid rgba(148, 163, 184, 0.16);
   box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.12);
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+
+.metric-card .metric-icon {
+  font-size: 1.35rem;
+  color: var(--accent);
+  line-height: 1;
 }
 
 .metric-card strong {
   font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+  display: block;
 }
 
 .metric-card span {
   display: block;
   font-size: 0.85rem;
-  margin-top: 0.35rem;
+  margin-top: 0.15rem;
   color: var(--text-muted);
 }
 
@@ -346,6 +364,14 @@ h1, h2, h3, h4 {
   place-items: center;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.icon-btn i[class*="fa-"],
+.icon-btn i.fa-solid,
+.icon-btn i.fa-regular,
+.icon-btn i.fa-brands {
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 .icon-btn:hover {
@@ -604,6 +630,14 @@ h1, h2, h3, h4 {
   text-decoration: none;
 }
 
+.btn i[class*="fa-"],
+.btn i.fa-solid,
+.btn i.fa-regular,
+.btn i.fa-brands {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .btn.primary {
   background: var(--accent);
   color: #0f172a;
@@ -763,6 +797,14 @@ h1, h2, h3, h4 {
   font-weight: 600;
   text-decoration: none;
   transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.footer-link i[class*="fa-"],
+.footer-link i.fa-solid,
+.footer-link i.fa-regular,
+.footer-link i.fa-brands {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .footer-link::after {
