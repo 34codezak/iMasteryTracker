@@ -161,7 +161,23 @@ function offsetDate(days) {
 function getStorage() {
   try {
     const storage = globalThis?.localStorage;
-    return typeof storage === "object" && storage !== null ? storage : undefined;
+    if (typeof storage !== "object" || storage === null) {
+      return undefined;
+    }
+
+    const hasRequiredMethods =
+      typeof storage.getItem === "function" &&
+      typeof storage.setItem === "function" &&
+      typeof storage.removeItem === "function";
+    if (!hasRequiredMethods) {
+      return undefined;
+    }
+
+    const probeKey = "__imastery-storage-probe__";
+    storage.setItem(probeKey, probeKey);
+    storage.removeItem(probeKey);
+
+    return storage;
   } catch (_) {
     return undefined;
   }
