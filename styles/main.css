@@ -23,7 +23,7 @@
   --journal-title: #f8fafc;
   --tag-bg: rgba(56, 189, 248, 0.18);
   --tag-color: #38bdf8;
-  --font-body: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Montserrat", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --bg-radial-1: rgba(250, 204, 21, 0.18);
   --bg-radial-2: rgba(202, 138, 4, 0.22);
   --bg-overlay: rgba(5, 5, 5, 0.88);
@@ -87,6 +87,7 @@ body {
   background-attachment: fixed;
   color: var(--text);
   line-height: 1.6;
+  font-family: var(--font-body);
 }
 
 main {
