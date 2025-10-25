@@ -1,0 +1,67 @@
+<!doctype html>
+<button value="cancel" class="btn ghost">Cancel</button>
+<button class="btn primary" id="saveSprintBtn" value="default">Save</button>
+</menu>
+<input type="hidden" id="editingSprintId" />
+</form>
+</dialog>
+
+
+<!-- Delete Confirm Modal -->
+<dialog id="confirmModal" class="modal">
+<form method="dialog" class="card">
+<h3>Confirm deletion</h3>
+<p id="confirmText">This action cannot be undone.</p>
+<menu class="row end">
+<button value="cancel" class="btn ghost">Cancel</button>
+<button class="btn danger" id="confirmYes" value="default">Delete</button>
+</menu>
+</form>
+</dialog>
+
+
+<template id="sprintTpl">
+<article class="sprint card">
+<header class="sprint__head">
+<div class="sprint__title">
+<h3 class="sprint__name"></h3>
+<div class="sprint__meta"></div>
+</div>
+<div class="sprint__controls">
+<button class="btn ghost edit">Edit</button>
+<button class="btn ghost danger delete">Delete</button>
+</div>
+</header>
+
+
+<div class="sprint__progress">
+<svg viewBox="0 0 120 120" class="ring" aria-hidden="true">
+<circle class="bg" cx="60" cy="60" r="54" />
+<circle class="fg" cx="60" cy="60" r="54" />
+</svg>
+<div class="ring__label"><span class="pct">0%</span><small>Done</small></div>
+</div>
+
+
+<section class="days"></section>
+</article>
+</template>
+
+
+<template id="dayTpl">
+<div class="day card subtle">
+<header class="day__head">
+<label class="checkbox">
+<input type="checkbox" class="day__check" />
+<span class="day__title">Day</span>
+</label>
+<time class="day__date"></time>
+</header>
+<textarea class="day__summary" rows="3" placeholder="What’s the plan / what did you do today?"></textarea>
+</div>
+</template>
+
+
+<script src="app.js"></script>
+</body>
+</html>
