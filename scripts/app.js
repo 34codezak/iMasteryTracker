@@ -61,11 +61,16 @@ function bindEvents() {
   buttons.export?.addEventListener("click", handleExport);
   document.getElementById(selectors.importInput)?.addEventListener("change", handleImport);
   buttons.reset?.addEventListener("click", handleReset);
-  buttons.newStream?.addEventListener("click", () => openDialog(dialogs.stream));
+  buttons.newStream?.addEventListener("click", startCreateStream);
   buttons.newEntry?.addEventListener("click", () => openDialog(dialogs.journal));
 
-  dialogs.stream?.querySelector("[data-dismiss]")?.addEventListener("click", () => closeDialog(dialogs.stream));
+  dialogs.stream?.querySelector("[data-dismiss]")?.addEventListener("click", () => {
+    closeDialog(dialogs.stream);
+    resetStreamFormState();
+  });
   dialogs.journal?.querySelector("[data-dismiss]")?.addEventListener("click", () => closeDialog(dialogs.journal));
+
+  dialogs.stream?.addEventListener("close", resetStreamFormState);
 
   forms.stream?.addEventListener("submit", handleStreamSubmit);
   forms.journal?.addEventListener("submit", handleJournalSubmit);
@@ -143,12 +148,19 @@ function renderStreamCard(stream) {
       </div>
       <div class="stream-meta">
         <span class="due">${dueCopy}</span>
-        <button class="icon-btn" type="button" data-action="remove-stream" aria-label="Remove ${escapeHtml(stream.name)}">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-            <path fill="currentColor" d="M9 9h2v8H9zm4 0h2v8h-2z" opacity="0.6" />
-            <path fill="currentColor" d="M5 6h14v2H5zm2 2h10v12H7z" />
-          </svg>
-        </button>
+        <div class="stream-actions">
+          <button class="icon-btn" type="button" data-action="edit-stream" aria-label="Edit ${escapeHtml(stream.name)}">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 1.42h-.67v-.67l9.86-9.86.67.67-9.86 9.86zm11.79-11.79 1.41-1.41a1 1 0 0 0 0-1.41l-1.83-1.83a1 1 0 0 0-1.41 0l-1.41 1.41 3.24 3.24z" />
+            </svg>
+          </button>
+          <button class="icon-btn" type="button" data-action="remove-stream" aria-label="Remove ${escapeHtml(stream.name)}">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path fill="currentColor" d="M9 9h2v8H9zm4 0h2v8h-2z" opacity="0.6" />
+              <path fill="currentColor" d="M5 6h14v2H5zm2 2h10v12H7z" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
     <div class="progress">
@@ -167,6 +179,59 @@ function renderStreamCard(stream) {
   return card;
 }
 
+function startCreateStream() {
+  resetStreamFormState();
+  openDialog(dialogs.stream);
+}
+
+function startEditStream(streamId) {
+  const state = getState();
+  const stream = state.streams?.find(s => s.id === streamId);
+  if (!stream || !forms.stream) return;
+
+  resetStreamFormState();
+
+  forms.stream.dataset.streamId = stream.id;
+  forms.stream.dataset.mode = "edit";
+
+  const titleEl = dialogs.stream?.querySelector("#streamDialogTitle");
+  if (titleEl) {
+    titleEl.textContent = "Edit learning stream";
+  }
+
+  const submitBtn = forms.stream.querySelector("button[type='submit']");
+  if (submitBtn) {
+    submitBtn.textContent = "Save changes";
+  }
+
+  const nameField = forms.stream.querySelector("[name='streamName']");
+  if (nameField instanceof HTMLInputElement) {
+    nameField.value = stream.name ?? "";
+  }
+
+  const focusField = forms.stream.querySelector("[name='streamFocus']");
+  if (focusField instanceof HTMLInputElement) {
+    focusField.value = stream.focus ?? "";
+  }
+
+  const dateField = forms.stream.querySelector("[name='streamDate']");
+  if (dateField instanceof HTMLInputElement) {
+    dateField.value = stream.targetDate ?? today();
+  }
+
+  const noteField = forms.stream.querySelector("[name='streamNote']");
+  if (noteField instanceof HTMLTextAreaElement) {
+    noteField.value = stream.note ?? "";
+  }
+
+  const milestonesField = forms.stream.querySelector("[name='streamMilestones']");
+  if (milestonesField instanceof HTMLTextAreaElement) {
+    milestonesField.value = (stream.milestones ?? []).map(m => m.title ?? "").join("\n");
+  }
+
+  openDialog(dialogs.stream);
+}
+
 function renderMilestones(stream) {
   if (!stream.milestones?.length) {
     return `<div class="empty-state">Add milestones to chart progress.</div>`;
@@ -175,13 +240,20 @@ function renderMilestones(stream) {
     .map(milestone => {
       const classes = ["milestone", milestone.complete ? "complete" : ""].filter(Boolean).join(" ");
       return `
-        <label class="${classes}">
-          <input type="checkbox" data-stream="${stream.id}" data-milestone="${milestone.id}" ${milestone.complete ? "checked" : ""} />
-          <span>
-            <span class="title">${escapeHtml(milestone.title)}</span>
-            <span class="meta">${milestone.complete ? "Locked in" : "In progress"}</span>
-          </span>
-        </label>
+        <div class="${classes}" data-milestone-id="${milestone.id}">
+          <label>
+            <input type="checkbox" data-stream="${stream.id}" data-milestone="${milestone.id}" ${milestone.complete ? "checked" : ""} />
+            <span>
+              <span class="title">${escapeHtml(milestone.title)}</span>
+              <span class="meta">${milestone.complete ? "Locked in" : "In progress"}</span>
+            </span>
+          </label>
+          <button class="icon-btn" type="button" data-action="edit-milestone" data-stream="${stream.id}" data-milestone="${milestone.id}" aria-label="Edit deliverable ${escapeHtml(milestone.title)}">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 1.42h-.67v-.67l9.86-9.86.67.67-9.86 9.86zm11.79-11.79 1.41-1.41a1 1 0 0 0 0-1.41l-1.83-1.83a1 1 0 0 0-1.41 0l-1.41 1.41 3.24 3.24z" />
+            </svg>
+          </button>
+        </div>
       `;
     })
     .join("");
@@ -259,25 +331,41 @@ function handleStreamSubmit(event) {
     .split("\n")
     .map(line => line.trim())
     .filter(Boolean);
+  const editingId = form.dataset.streamId;
 
-  mutate(state => {
-    const stream = {
-      id: createId("stream"),
-      name,
-      focus,
-      targetDate,
-      note,
-      milestones: milestoneLines.map(line => ({ id: createId("milestone"), title: line, complete: false }))
-    };
-    state.streams = [stream, ...(state.streams ?? [])];
-  });
+  if (editingId) {
+    mutate(state => {
+      const stream = state.streams?.find(s => s.id === editingId);
+      if (!stream) return;
+      stream.name = name;
+      stream.focus = focus;
+      stream.targetDate = targetDate;
+      stream.note = note;
+      const existingMilestones = stream.milestones ?? [];
+      const nextMilestones = milestoneLines.map((line, index) => {
+        const current = existingMilestones[index];
+        if (current) {
+          return { ...current, title: line };
+        }
+        return { id: createId("milestone"), title: line, complete: false };
+      });
+      stream.milestones = nextMilestones;
+    });
+  } else {
+    mutate(state => {
+      const stream = {
+        id: createId("stream"),
+        name,
+        focus,
+        targetDate,
+        note,
+        milestones: milestoneLines.map(line => ({ id: createId("milestone"), title: line, complete: false }))
+      };
+      state.streams = [stream, ...(state.streams ?? [])];
+    });
+  }
 
   closeDialog(dialogs.stream);
-  form.reset();
-  const dateField = form.querySelector("[name='streamDate']");
-  if (dateField) {
-    dateField.value = today();
-  }
   renderAll();
 }
 
@@ -340,15 +428,49 @@ function handleStreamNoteInput(event) {
 }
 
 function handleStreamActions(event) {
-  const button = event.target.closest?.("[data-action='remove-stream']");
-  if (!button) return;
-  const streamId = button.closest("[data-stream-id]")?.dataset.streamId;
+  const actionButton = event.target.closest?.("[data-action]");
+  if (!actionButton) return;
+
+  const streamCard = actionButton.closest("[data-stream-id]");
+  const streamId = streamCard?.dataset.streamId;
   if (!streamId) return;
 
-  mutate(state => {
-    state.streams = (state.streams ?? []).filter(stream => stream.id !== streamId);
-  });
-  renderAll();
+  const action = actionButton.dataset.action;
+
+  if (action === "remove-stream") {
+    mutate(state => {
+      state.streams = (state.streams ?? []).filter(stream => stream.id !== streamId);
+    });
+    renderAll();
+    return;
+  }
+
+  if (action === "edit-stream") {
+    startEditStream(streamId);
+    return;
+  }
+
+  if (action === "edit-milestone") {
+    const milestoneId = actionButton.dataset.milestone;
+    if (!milestoneId) return;
+    const state = getState();
+    const stream = state.streams?.find(s => s.id === streamId);
+    const milestone = stream?.milestones?.find(m => m.id === milestoneId);
+    if (!milestone) return;
+    const nextTitle = prompt("Update deliverable title", milestone.title ?? "");
+    if (nextTitle == null) return;
+    const trimmed = nextTitle.trim();
+    if (!trimmed) return;
+    mutate(current => {
+      const currentStream = current.streams?.find(s => s.id === streamId);
+      const currentMilestone = currentStream?.milestones?.find(m => m.id === milestoneId);
+      if (currentMilestone) {
+        currentMilestone.title = trimmed;
+      }
+    });
+    renderAll();
+    return;
+  }
 }
 
 function handleHabitToggle(event) {
@@ -433,11 +555,33 @@ function handleReset() {
   renderAll();
 }
 
+function resetStreamFormState() {
+  if (!forms.stream) return;
+  forms.stream.reset();
+  delete forms.stream.dataset.streamId;
+  delete forms.stream.dataset.mode;
+
+  const titleEl = dialogs.stream?.querySelector("#streamDialogTitle");
+  if (titleEl) {
+    titleEl.textContent = "New learning stream";
+  }
+
+  const submitBtn = forms.stream.querySelector("button[type='submit']");
+  if (submitBtn) {
+    submitBtn.textContent = "Create stream";
+  }
+
+  const milestonesField = forms.stream.querySelector("[name='streamMilestones']");
+  if (milestonesField instanceof HTMLTextAreaElement) {
+    milestonesField.value = "";
+  }
+}
+
 function openDialog(dialog) {
   if (!dialog) return;
   if (dialog.id === "streamDialog") {
     const dateField = dialog.querySelector("[name='streamDate']");
-    if (dateField) {
+    if (dateField && !dateField.value) {
       dateField.value = today();
     }
   }
