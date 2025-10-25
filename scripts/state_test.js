@@ -43,13 +43,15 @@ Deno.test("state persistence helpers", async (t) => {
     const { mod, storage } = await loadStateModule();
     try {
       const { reset, defaultState } = mod;
+      const baseCalls = storage.setItemCalls;
       const first = reset();
-      assertEquals(storage.setItemCalls, 1);
+      assertEquals(storage.setItemCalls, baseCalls + 1);
       assertEquals(first.streams[0].name, defaultState.streams[0].name);
 
       // Mutate the returned state and ensure defaults stay intact.
       first.streams[0].name = "Altered";
       const second = reset();
+      assertEquals(storage.setItemCalls, baseCalls + 2);
       assertEquals(second.streams[0].name, defaultState.streams[0].name);
       assertNotStrictEquals(second, defaultState);
       assertNotStrictEquals(second, first);
@@ -62,11 +64,12 @@ Deno.test("state persistence helpers", async (t) => {
     const { mod, storage } = await loadStateModule();
     try {
       const { mutate, getState } = mod;
+      const baseCalls = storage.setItemCalls;
       const changed = mutate((draft) => {
         draft.theme = "light";
       });
       assert(changed);
-      assertEquals(storage.setItemCalls, 1);
+      assertEquals(storage.setItemCalls, baseCalls + 1);
       assertEquals(getState().theme, "light");
       assertEquals(
         storage.store.get(STORAGE_KEY),
@@ -77,7 +80,7 @@ Deno.test("state persistence helpers", async (t) => {
         // Intentionally no changes.
       });
       assertEquals(unchanged, false);
-      assertEquals(storage.setItemCalls, 1);
+      assertEquals(storage.setItemCalls, baseCalls + 1);
     } finally {
       cleanup();
     }
