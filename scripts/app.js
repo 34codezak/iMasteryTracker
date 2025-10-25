@@ -90,8 +90,6 @@ function renderAll() {
 function renderOverview(state) {
   const streams = state.streams ?? [];
   const habits = state.habits ?? [];
-  const journal = state.journal ?? [];
-
   const totalMilestones = streams.reduce((sum, s) => sum + (s.milestones?.length ?? 0), 0);
   const completedMilestones = streams.reduce(
     (sum, s) => sum + (s.milestones?.filter(m => m.complete).length ?? 0),
