@@ -90,6 +90,7 @@ function renderAll() {
 function renderOverview(state) {
   const streams = state.streams ?? [];
   const habits = state.habits ?? [];
+  const journalEntries = state.journal ?? [];
   const totalMilestones = streams.reduce((sum, s) => sum + (s.milestones?.length ?? 0), 0);
   const completedMilestones = streams.reduce(
     (sum, s) => sum + (s.milestones?.filter(m => m.complete).length ?? 0),
@@ -97,6 +98,7 @@ function renderOverview(state) {
   );
   const completionPct = totalMilestones ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
   const activeHabits = habits.filter(h => h.completeToday).length;
+  const journalCount = journalEntries.length;
 
   if (overviewEls.streams) overviewEls.streams.textContent = String(streams.length).padStart(2, "0");
   if (overviewEls.completion) overviewEls.completion.textContent = `${completionPct}%`;
@@ -104,7 +106,7 @@ function renderOverview(state) {
   if (overviewEls.habits) overviewEls.habits.textContent = activeHabits.toString().padStart(2, "0");
 
   if (heroSubtext) {
-    heroSubtext.textContent = `Currently guiding ${streams.length} learning stream${streams.length === 1 ? "" : "s"} with ${totalMilestones} milestone${totalMilestones === 1 ? "" : "s"} in motion.`;
+    heroSubtext.textContent = `Currently guiding ${streams.length} learning stream${streams.length === 1 ? "" : "s"} with ${totalMilestones} milestone${totalMilestones === 1 ? "" : "s"} in motion and ${journalCount} reflection${journalCount === 1 ? "" : "s"} captured.`;
   }
 }
 
