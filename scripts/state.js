@@ -71,12 +71,13 @@ const defaultState = {
 let state = loadState();
 
 function loadState() {
-  if (typeof localStorage === "undefined") {
+  const storage = getStorage();
+  if (!storage) {
     return clone(defaultState);
   }
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(STORAGE_KEY);
     if (!raw) {
       return clone(defaultState);
     }
@@ -106,11 +107,12 @@ function clone(value) {
 }
 
 function persist() {
-  if (typeof localStorage === "undefined") {
+  const storage = getStorage();
+  if (!storage) {
     return;
   }
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    storage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (error) {
     console.warn("Unable to persist data", error);
   }
@@ -154,6 +156,15 @@ function offsetDate(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+function getStorage() {
+  try {
+    const storage = globalThis?.localStorage;
+    return typeof storage === "object" && storage !== null ? storage : undefined;
+  } catch (_) {
+    return undefined;
+  }
 }
 
 export {
