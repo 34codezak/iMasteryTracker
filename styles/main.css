@@ -23,7 +23,9 @@
   --journal-title: #f8fafc;
   --tag-bg: rgba(56, 189, 248, 0.18);
   --tag-color: #38bdf8;
-  --font-body: "Montserrat", "Font Awesome 6 Free", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --footer-glow-base: rgba(250, 204, 21, 0.85);
+  --footer-glow-soft: rgba(250, 204, 21, 0.35);
+  --font-body: "Montserrat", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --bg-radial-1: rgba(250, 204, 21, 0.18);
   --bg-radial-2: rgba(202, 138, 4, 0.22);
   --bg-overlay: rgba(5, 5, 5, 0.88);
@@ -64,6 +66,8 @@
   --journal-title: #064e3b;
   --tag-bg: rgba(34, 197, 94, 0.16);
   --tag-color: #047857;
+  --footer-glow-base: rgba(34, 197, 94, 0.85);
+  --footer-glow-soft: rgba(34, 197, 94, 0.35);
 }
 
 * {
@@ -738,6 +742,18 @@ h1, h2, h3, h4 {
   }
 }
 
+@keyframes footerGlow {
+  0% {
+    text-shadow: 0 0 6px var(--footer-glow-soft), 0 0 16px var(--footer-glow-soft);
+  }
+  50% {
+    text-shadow: 0 0 12px var(--footer-glow-base), 0 0 32px var(--footer-glow-base);
+  }
+  100% {
+    text-shadow: 0 0 6px var(--footer-glow-soft), 0 0 16px var(--footer-glow-soft);
+  }
+}
+
 .footer-text {
   display: grid;
   gap: 0.2rem;
@@ -757,7 +773,9 @@ h1, h2, h3, h4 {
 }
 
 .footer-author strong {
-  color: var(--text);
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--footer-glow-soft), 0 0 18px var(--footer-glow-base);
+  animation: footerGlow 3.2s ease-in-out infinite;
 }
 
 .footer-links {
