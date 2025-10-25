@@ -76,10 +76,11 @@ html, body {
 
 body {
   background-color: var(--bg);
-  background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)),
-                    radial-gradient(circle at 0% 0%, var(--bg-radial-1), transparent 45%),
-                    radial-gradient(circle at 100% 100%, var(--bg-radial-2), transparent 45%),
-                    url("../assets/progress1.webp");
+  background-image:
+    linear-gradient(var(--bg-overlay), var(--bg-overlay)),
+    radial-gradient(circle at 0% 0%, var(--bg-radial-1), transparent 45%),
+    radial-gradient(circle at 100% 100%, var(--bg-radial-2), transparent 45%),
+    url("../assets/progress1.webp");
   background-size: cover, auto, auto, cover;
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
   background-position: center, 0 0, 100% 100%, center;
