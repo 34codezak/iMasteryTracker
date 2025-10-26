@@ -6,6 +6,7 @@ import {
   createId,
   today
 } from "./state.js";
+import SidebarController from "./sidebar.js";
 
 const selectors = {
   streamList: "streamList",
@@ -71,6 +72,8 @@ const heroSubtext = document.getElementById("heroSubtext");
 init();
 
 function init() {
+  sidebarController = new SidebarController(layout, mobileMedia);
+  sidebarController.init();
   syncHabitCompletion();
   applyTheme(getState().theme ?? "dark");
   renderAll();
@@ -796,51 +799,6 @@ function handleReset() {
   }
   reset();
   renderAll();
-}
-
-function setupSidebarControls() {
-  const sidebar = document.querySelector(sidebarSelectors.container);
-  if (!sidebar) return;
-
-  const toggle = document.querySelector(sidebarSelectors.toggle);
-  const dismiss = document.querySelector(sidebarSelectors.dismiss);
-  const scrim = document.querySelector(sidebarSelectors.scrim);
-
-  toggle?.addEventListener("click", () => toggleSidebar());
-  [dismiss, scrim].forEach(element => {
-    element?.addEventListener("click", () => toggleSidebar(false));
-  });
-
-  handleMediaChange();
-  if (!desktopMediaQuery) return;
-
-  if (typeof desktopMediaQuery.addEventListener === "function") {
-    desktopMediaQuery.addEventListener("change", handleMediaChange);
-  } else if (typeof desktopMediaQuery.addListener === "function") {
-    desktopMediaQuery.addListener(handleMediaChange);
-  }
-}
-
-function toggleSidebar(force) {
-  const sidebar = document.querySelector(sidebarSelectors.container);
-  if (!sidebar) return;
-
-  const scrim = document.querySelector(sidebarSelectors.scrim);
-  const shouldOpen = typeof force === "boolean" ? force : !sidebar.classList.contains("is-open");
-
-  sidebar.classList.toggle("is-open", shouldOpen);
-  sidebar.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
-
-  if (scrim) {
-    scrim.classList.toggle("is-visible", shouldOpen);
-    scrim.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
-  }
-
-  document.body.classList.toggle("sidebar-open", shouldOpen);
-}
-
-function handleMediaChange() {
-  toggleSidebar(false);
 }
 
 function resetStreamFormState() {
