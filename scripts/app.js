@@ -6,7 +6,6 @@ import {
   createId,
   today
 } from "./state.js";
-import SidebarController from "./sidebar.js";
 
 const selectors = {
   streamList: "streamList",
@@ -44,6 +43,16 @@ const overviewEls = {
 
 const heroSubtext = document.getElementById("heroSubtext");
 
+const sidebarElements = {
+  panel: document.getElementById("heroActions"),
+  trigger: document.getElementById("menuToggle"),
+  backdrop: document.getElementById("sidebarBackdrop"),
+  mobileMedia:
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(max-width: 768px)")
+      : null
+};
+
 const focusableSelectors = [
   "a[href]",
   "area[href]",
@@ -67,13 +76,9 @@ const sidebarFocusTrap = {
   handleFocusin: null
 };
 
-const heroSubtext = document.getElementById("heroSubtext");
-
 init();
 
 function init() {
-  sidebarController = new SidebarController(layout, mobileMedia);
-  sidebarController.init();
   syncHabitCompletion();
   applyTheme(getState().theme ?? "dark");
   renderAll();
@@ -172,7 +177,13 @@ function renderOverview(state) {
   if (overviewEls.habits) overviewEls.habits.textContent = activeHabits.toString().padStart(2, "0");
 
   if (heroSubtext) {
-    heroSubtext.textContent = `Currently guiding ${streams.length} learning stream${streams.length === 1 ? "" : "s"} with ${totalMilestones} milestone${totalMilestones === 1 ? "" : "s"} in motion while ${monthPct}% of the month has unfolded and milestone momentum holds at ${completionPct}%. ${journalCount} reflection${journalCount === 1 ? "" : "s"} captured.`;
+    const streamLabel = streams.length === 1 ? "" : "s";
+    const milestoneLabel = totalMilestones === 1 ? "" : "s";
+    const reflectionLabel = journalCount === 1 ? "" : "s";
+    heroSubtext.textContent =
+      `Currently guiding ${streams.length} learning stream${streamLabel} with ${totalMilestones} milestone${milestoneLabel} in motion ` +
+      `while ${monthPct}% of the month has unfolded and milestone momentum holds at ${completionPct}%. ` +
+      `${journalCount} reflection${reflectionLabel} captured.`;
   }
 }
 
@@ -635,7 +646,7 @@ function updateSidebar(open) {
   const isMobile = mobileMedia
     ? mobileMedia.matches
     : typeof window !== "undefined"
-      ? window.innerWidth <= 720
+      ? window.innerWidth <= 768
       : false;
   const shouldOpen = isMobile ? Boolean(open) : false;
   const panelHidden = isMobile ? !shouldOpen : false;
@@ -644,7 +655,7 @@ function updateSidebar(open) {
   panel.setAttribute("aria-hidden", panelHidden ? "true" : "false");
 
   if (shouldOpen) {
-    activateSidebarFocusTrap(actions);
+    activateSidebarFocusTrap(panel);
   } else {
     deactivateSidebarFocusTrap();
   }
@@ -663,6 +674,11 @@ function updateSidebar(open) {
   if (backdrop) {
     backdrop.classList.toggle("is-active", shouldOpen);
     backdrop.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+    if (shouldOpen) {
+      backdrop.removeAttribute("hidden");
+    } else {
+      backdrop.setAttribute("hidden", "");
+    }
   }
 
   document.body.classList.toggle("sidebar-open", shouldOpen);
