@@ -243,9 +243,14 @@ function renderMilestones(stream) {
               <span class="meta">${milestone.complete ? "Locked in" : "In progress"}</span>
             </span>
           </label>
-          <button class="icon-btn" type="button" data-action="edit-milestone" data-stream="${stream.id}" data-milestone="${milestone.id}" aria-label="Edit deliverable ${escapeHtml(milestone.title)}">
-            <i class="fa-solid fa-pen" aria-hidden="true"></i>
-          </button>
+          <div class="milestone-actions">
+            <button class="icon-btn" type="button" data-action="edit-milestone" data-stream="${stream.id}" data-milestone="${milestone.id}" aria-label="Edit deliverable ${escapeHtml(milestone.title)}">
+              <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            </button>
+            <button class="icon-btn" type="button" data-action="remove-milestone" data-stream="${stream.id}" data-milestone="${milestone.id}" aria-label="Remove deliverable ${escapeHtml(milestone.title)}">
+              <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
       `;
     })
@@ -431,8 +436,15 @@ function handleStreamActions(event) {
   const action = actionButton.dataset.action;
 
   if (action === "remove-stream") {
-    mutate(state => {
-      state.streams = (state.streams ?? []).filter(stream => stream.id !== streamId);
+    const state = getState();
+    const stream = state.streams?.find(s => s.id === streamId);
+    const streamName = stream?.name?.trim() ? `"${stream.name}"` : "this stream";
+    const confirmed = confirm(`Delete ${streamName}? This will remove all of its deliverables.`);
+    if (!confirmed) {
+      return;
+    }
+    mutate(current => {
+      current.streams = (current.streams ?? []).filter(item => item.id !== streamId);
     });
     renderAll();
     return;
@@ -440,6 +452,26 @@ function handleStreamActions(event) {
 
   if (action === "edit-stream") {
     startEditStream(streamId);
+    return;
+  }
+
+  if (action === "remove-milestone") {
+    const milestoneId = actionButton.dataset.milestone;
+    if (!milestoneId) return;
+    const state = getState();
+    const stream = state.streams?.find(s => s.id === streamId);
+    const milestone = stream?.milestones?.find(m => m.id === milestoneId);
+    const deliverableName = milestone?.title?.trim() ? `"${milestone.title}"` : "this deliverable";
+    const confirmed = confirm(`Remove ${deliverableName} from ${stream?.name ?? "this stream"}?`);
+    if (!confirmed) {
+      return;
+    }
+    mutate(current => {
+      const targetStream = current.streams?.find(s => s.id === streamId);
+      if (!targetStream?.milestones) return;
+      targetStream.milestones = targetStream.milestones.filter(m => m.id !== milestoneId);
+    });
+    renderAll();
     return;
   }
 

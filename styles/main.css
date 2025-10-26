@@ -453,8 +453,13 @@ h1, h2, h3, h4 {
   accent-color: var(--accent);
 }
 
-.milestone .icon-btn {
+.milestone-actions {
+  display: flex;
+  gap: 0.45rem;
   margin-left: auto;
+}
+
+.milestone-actions .icon-btn {
   width: 1.75rem;
   height: 1.75rem;
 }
