@@ -43,14 +43,27 @@ const overviewEls = {
 
 const heroSubtext = document.getElementById("heroSubtext");
 
-const sidebarElements = {
-  panel: document.getElementById("heroActions"),
-  trigger: document.getElementById("menuToggle"),
-  backdrop: document.querySelector(".sidebar-backdrop"),
-  mobileMedia:
-    typeof window !== "undefined" && window.matchMedia
-      ? window.matchMedia("(max-width: 720px)")
-      : null
+const focusableSelectors = [
+  "a[href]",
+  "area[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "summary",
+  "[tabindex]:not([tabindex='-1'])",
+  "[contenteditable='true']"
+].join(",");
+
+const sidebarFocusTrap = {
+  active: false,
+  container: null,
+  first: null,
+  last: null,
+  previous: null,
+  hadTabIndex: false,
+  handleKeydown: null,
+  handleFocusin: null
 };
 
 init();
@@ -625,9 +638,15 @@ function updateSidebar(open) {
   panel.classList.toggle("is-open", shouldOpen);
   panel.setAttribute("aria-hidden", panelHidden ? "true" : "false");
 
-  if (trigger) {
-    trigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
-    trigger.setAttribute("aria-label", shouldOpen ? "Close sidebar menu" : "Open sidebar menu");
+  if (shouldOpen) {
+    activateSidebarFocusTrap(actions);
+  } else {
+    deactivateSidebarFocusTrap();
+  }
+
+  if (layout.menuToggle) {
+    layout.menuToggle.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    layout.menuToggle.setAttribute("aria-label", shouldOpen ? "Close sidebar menu" : "Open sidebar menu");
   }
 
   const icon = trigger?.querySelector?.("i");
@@ -642,6 +661,99 @@ function updateSidebar(open) {
   }
 
   document.body.classList.toggle("sidebar-open", shouldOpen);
+}
+
+function activateSidebarFocusTrap(container) {
+  if (!container || sidebarFocusTrap.active) return;
+
+  const focusable = Array.from(container.querySelectorAll(focusableSelectors)).filter(candidate => {
+    if (!(candidate instanceof HTMLElement)) return false;
+    return !(candidate.hasAttribute("disabled") || candidate.getAttribute("aria-hidden") === "true");
+  });
+
+  const state = sidebarFocusTrap;
+  state.active = true;
+  state.container = container;
+  state.previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  state.hadTabIndex = container.hasAttribute("tabindex");
+
+  if (!focusable.length && !state.hadTabIndex) {
+    container.setAttribute("tabindex", "-1");
+  }
+
+  const targets = focusable.length ? focusable : [container];
+  state.first = targets[0];
+  state.last = targets[targets.length - 1];
+
+  state.handleKeydown = event => {
+    if (!state.active || event.key !== "Tab") return;
+    const current = document.activeElement;
+    if (event.shiftKey) {
+      if (current === state.first || !state.container?.contains(current)) {
+        event.preventDefault();
+        state.last instanceof HTMLElement && state.last.focus();
+      }
+      return;
+    }
+    if (current === state.last) {
+      event.preventDefault();
+      state.first instanceof HTMLElement && state.first.focus();
+    }
+  };
+
+  state.handleFocusin = event => {
+    if (!state.active || !state.container) return;
+    if (!state.container.contains(event.target)) {
+      event.stopPropagation();
+      if (state.first instanceof HTMLElement) {
+        state.first.focus();
+      }
+    }
+  };
+
+  document.addEventListener("keydown", state.handleKeydown, true);
+  document.addEventListener("focusin", state.handleFocusin, true);
+
+  const focusFirst = () => {
+    if (state.first instanceof HTMLElement) {
+      state.first.focus();
+    }
+  };
+
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    window.requestAnimationFrame(focusFirst);
+  } else if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(focusFirst);
+  } else {
+    focusFirst();
+  }
+}
+
+function deactivateSidebarFocusTrap() {
+  const state = sidebarFocusTrap;
+  if (!state.active) return;
+
+  document.removeEventListener("keydown", state.handleKeydown, true);
+  document.removeEventListener("focusin", state.handleFocusin, true);
+
+  if (state.container && !state.hadTabIndex) {
+    state.container.removeAttribute("tabindex");
+  }
+
+  const restoreTarget = state.previous;
+
+  state.active = false;
+  state.container = null;
+  state.first = null;
+  state.last = null;
+  state.previous = null;
+  state.hadTabIndex = false;
+  state.handleKeydown = null;
+  state.handleFocusin = null;
+
+  if (restoreTarget instanceof HTMLElement) {
+    restoreTarget.focus();
+  }
 }
 
 function handleExport() {
@@ -682,6 +794,51 @@ function handleReset() {
   }
   reset();
   renderAll();
+}
+
+function setupSidebarControls() {
+  const sidebar = document.querySelector(sidebarSelectors.container);
+  if (!sidebar) return;
+
+  const toggle = document.querySelector(sidebarSelectors.toggle);
+  const dismiss = document.querySelector(sidebarSelectors.dismiss);
+  const scrim = document.querySelector(sidebarSelectors.scrim);
+
+  toggle?.addEventListener("click", () => toggleSidebar());
+  [dismiss, scrim].forEach(element => {
+    element?.addEventListener("click", () => toggleSidebar(false));
+  });
+
+  handleMediaChange();
+  if (!desktopMediaQuery) return;
+
+  if (typeof desktopMediaQuery.addEventListener === "function") {
+    desktopMediaQuery.addEventListener("change", handleMediaChange);
+  } else if (typeof desktopMediaQuery.addListener === "function") {
+    desktopMediaQuery.addListener(handleMediaChange);
+  }
+}
+
+function toggleSidebar(force) {
+  const sidebar = document.querySelector(sidebarSelectors.container);
+  if (!sidebar) return;
+
+  const scrim = document.querySelector(sidebarSelectors.scrim);
+  const shouldOpen = typeof force === "boolean" ? force : !sidebar.classList.contains("is-open");
+
+  sidebar.classList.toggle("is-open", shouldOpen);
+  sidebar.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+
+  if (scrim) {
+    scrim.classList.toggle("is-visible", shouldOpen);
+    scrim.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+  }
+
+  document.body.classList.toggle("sidebar-open", shouldOpen);
+}
+
+function handleMediaChange() {
+  toggleSidebar(false);
 }
 
 function resetStreamFormState() {
