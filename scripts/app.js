@@ -6,6 +6,7 @@ import {
   createId,
   today
 } from "./state.js";
+import SidebarController from "./sidebar.js";
 
 const selectors = {
   streamList: "streamList",
@@ -44,26 +45,27 @@ const overviewEls = {
 const layout = {
   heroActions: document.getElementById("heroActions"),
   menuToggle: document.getElementById("menuToggle"),
-  sidebarBackdrop: document.getElementById("sidebarBackdrop"),
-  mobileMedia: typeof window !== "undefined" && window.matchMedia ? window.matchMedia("(max-width: 720px)") : null
+  sidebarBackdrop: document.getElementById("sidebarBackdrop")
 };
+
+const mobileMedia =
+  typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia("(max-width: 720px)")
+    : null;
 
 const heroSubtext = document.getElementById("heroSubtext");
 
-const layout = {
-  heroActions: document.getElementById("heroActions"),
-  menuToggle: document.getElementById("menuToggle"),
-  sidebarBackdrop: document.getElementById("sidebarBackdrop")
-};
+let sidebarController;
 
 init();
 
 function init() {
+  sidebarController = new SidebarController(layout, mobileMedia);
+  sidebarController.init();
   syncHabitCompletion();
   applyTheme(getState().theme ?? "dark");
   renderAll();
   bindEvents();
-  toggleSidebar(false);
 }
 
 function bindEvents() {
@@ -98,27 +100,6 @@ function bindEvents() {
 
   const habitContainer = document.getElementById(selectors.habitList);
   habitContainer?.addEventListener("change", handleHabitToggle);
-
-  layout.menuToggle?.addEventListener("click", () => toggleSidebar());
-  layout.sidebarBackdrop?.addEventListener("click", () => toggleSidebar(false));
-
-  const handleMediaChange = event => {
-    if (!event.matches) {
-      toggleSidebar(false);
-    } else {
-      toggleSidebar(false);
-    }
-  };
-
-  if (layout.mobileMedia) {
-    if (typeof layout.mobileMedia.addEventListener === "function") {
-      layout.mobileMedia.addEventListener("change", handleMediaChange);
-    } else if (typeof layout.mobileMedia.addListener === "function") {
-      layout.mobileMedia.addListener(handleMediaChange);
-    }
-  }
-
-  document.addEventListener("keydown", handleGlobalKeydown);
 }
 
 function renderAll() {
@@ -588,53 +569,6 @@ function syncHabitCompletion() {
   });
 }
 
-function handleGlobalKeydown(event) {
-  if (event.key !== "Escape") return;
-  if (layout.heroActions?.classList.contains("is-open")) {
-    toggleSidebar(false);
-    layout.menuToggle?.focus();
-  }
-}
-
-function toggleSidebar(force) {
-  const actions = layout.heroActions;
-  if (!actions) return;
-
-  const isMobile = layout.mobileMedia
-    ? layout.mobileMedia.matches
-    : typeof window !== "undefined"
-      ? window.innerWidth <= 720
-      : false;
-  const requestedOpen = typeof force === "boolean" ? force : !actions.classList.contains("is-open");
-  const shouldOpen = isMobile ? requestedOpen : false;
-  const icon = layout.menuToggle?.querySelector?.("i");
-
-  actions.classList.toggle("is-open", shouldOpen);
-  const hidden = isMobile ? !shouldOpen : false;
-  actions.setAttribute("aria-hidden", hidden ? "true" : "false");
-
-  if (layout.menuToggle) {
-    layout.menuToggle.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
-    layout.menuToggle.setAttribute("aria-label", shouldOpen ? "Close sidebar menu" : "Open sidebar menu");
-  }
-
-  if (icon) {
-    icon.classList.toggle("fa-bars", !shouldOpen);
-    icon.classList.toggle("fa-xmark", shouldOpen);
-  }
-
-  if (layout.sidebarBackdrop) {
-    if (shouldOpen) {
-      layout.sidebarBackdrop.removeAttribute("hidden");
-    } else {
-      layout.sidebarBackdrop.setAttribute("hidden", "");
-    }
-    layout.sidebarBackdrop.classList.toggle("is-active", shouldOpen);
-  }
-
-  document.body.classList.toggle("sidebar-open", shouldOpen);
-}
-
 function handleExport() {
   const state = getState();
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
@@ -673,51 +607,6 @@ function handleReset() {
   }
   reset();
   renderAll();
-}
-
-function setupSidebarControls() {
-  const sidebar = document.querySelector(sidebarSelectors.container);
-  if (!sidebar) return;
-
-  const toggle = document.querySelector(sidebarSelectors.toggle);
-  const dismiss = document.querySelector(sidebarSelectors.dismiss);
-  const scrim = document.querySelector(sidebarSelectors.scrim);
-
-  toggle?.addEventListener("click", () => toggleSidebar());
-  [dismiss, scrim].forEach(element => {
-    element?.addEventListener("click", () => toggleSidebar(false));
-  });
-
-  handleMediaChange();
-  if (!desktopMediaQuery) return;
-
-  if (typeof desktopMediaQuery.addEventListener === "function") {
-    desktopMediaQuery.addEventListener("change", handleMediaChange);
-  } else if (typeof desktopMediaQuery.addListener === "function") {
-    desktopMediaQuery.addListener(handleMediaChange);
-  }
-}
-
-function toggleSidebar(force) {
-  const sidebar = document.querySelector(sidebarSelectors.container);
-  if (!sidebar) return;
-
-  const scrim = document.querySelector(sidebarSelectors.scrim);
-  const shouldOpen = typeof force === "boolean" ? force : !sidebar.classList.contains("is-open");
-
-  sidebar.classList.toggle("is-open", shouldOpen);
-  sidebar.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
-
-  if (scrim) {
-    scrim.classList.toggle("is-visible", shouldOpen);
-    scrim.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
-  }
-
-  document.body.classList.toggle("sidebar-open", shouldOpen);
-}
-
-function handleMediaChange() {
-  toggleSidebar(false);
 }
 
 function resetStreamFormState() {
@@ -815,21 +704,3 @@ function applyTheme(theme) {
   document.documentElement.classList.toggle("theme-light", theme === "light");
 }
 
-function toggleSidebar(force) {
-  const panel = layout.heroActions;
-  if (!panel) return;
-  const open = typeof force === "boolean" ? force : !panel.classList.contains("is-open");
-
-  panel.classList.toggle("is-open", open);
-  layout.menuToggle?.setAttribute("aria-expanded", String(open));
-  if (layout.sidebarBackdrop) {
-    layout.sidebarBackdrop.hidden = !open;
-  }
-}
-
-function handleGlobalKeydown(event) {
-  if (event.key !== "Escape") return;
-  if (!layout.heroActions?.classList.contains("is-open")) return;
-  toggleSidebar(false);
-  layout.menuToggle?.focus();
-}
