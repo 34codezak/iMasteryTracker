@@ -4,20 +4,46 @@ export default class SidebarController {
     this.toggleBtn = menuToggle ?? null;
     this.backdrop = sidebarBackdrop ?? null;
     this.mobileMedia = mobileMedia ?? null;
-    this.open = false;
 
-    this.handleResize = () => this.sync();
+    const hasPanelOpen = this.panel?.classList?.contains("is-open");
+    const toggleExpanded = this.toggleBtn?.getAttribute("aria-expanded") === "true";
+    const bodyOpen =
+      typeof document !== "undefined" &&
+      document.body?.classList?.contains("sidebar-open");
+    this.open = Boolean(hasPanelOpen || toggleExpanded || bodyOpen);
+
+    this._resizeTimeout = null;
+
+    this.handleToggleClick = () => this.toggle();
+    this.handleBackdropClick = () => this.toggle(false);
     this.handleMediaChange = () => this.toggle(false);
+    this.handleKeydown = event => {
+      if (event.key === "Escape" && this.open) {
+        this.toggle(false);
+        this.toggleBtn?.focus();
+      }
+    };
+    this.handleResize = () => {
+      if (this._resizeTimeout) {
+        clearTimeout(this._resizeTimeout);
+      }
+      this._resizeTimeout = setTimeout(() => {
+        this._resizeTimeout = null;
+        this.sync();
+      }, 150);
+    };
+
+    this.initialized = false;
   }
 
   init() {
-    if (!this.panel || !this.toggleBtn) {
+    if (this.initialized || !this.panel || !this.toggleBtn) {
       return;
     }
 
-    this.toggleBtn.addEventListener("click", () => this.toggle());
-    this.backdrop?.addEventListener("click", () => this.toggle(false));
-    document.addEventListener("keydown", this.onKeydown);
+    this.toggleBtn.addEventListener("click", this.handleToggleClick);
+    this.backdrop?.addEventListener("click", this.handleBackdropClick);
+    document.addEventListener("keydown", this.handleKeydown);
     window.addEventListener("resize", this.handleResize);
 
     if (this.mobileMedia) {
@@ -28,45 +54,62 @@ export default class SidebarController {
       }
     }
 
+    this.initialized = true;
     this.sync();
   }
 
-  sync() {
-    if (!this.panel || !this.toggleBtn) return;
-
-    const toggleVisible = this.toggleBtn.offsetParent !== null;
-    if (!toggleVisible && this.open) {
-      this.open = false;
+  destroy() {
+    if (!this.initialized) {
+      return;
     }
 
-    this.applyAttrs();
+    this.toggleBtn?.removeEventListener("click", this.handleToggleClick);
+    this.backdrop?.removeEventListener("click", this.handleBackdropClick);
+    document.removeEventListener("keydown", this.handleKeydown);
+    window.removeEventListener("resize", this.handleResize);
+
+    if (this.mobileMedia) {
+      if (typeof this.mobileMedia.removeEventListener === "function") {
+        this.mobileMedia.removeEventListener("change", this.handleMediaChange);
+      } else if (typeof this.mobileMedia.removeListener === "function") {
+        this.mobileMedia.removeListener(this.handleMediaChange);
+      }
+    }
+
+    if (this._resizeTimeout) {
+      clearTimeout(this._resizeTimeout);
+      this._resizeTimeout = null;
+    }
+
+    this.toggle(false);
+    this.initialized = false;
+  }
+
+  sync() {
+    this._update(this.open);
   }
 
   toggle(force) {
-    if (!this.panel || !this.toggleBtn) return;
-
-    const toggleVisible = this.toggleBtn.offsetParent !== null;
-    const nextState = typeof force === "boolean" ? force : !this.open;
-    this.open = toggleVisible ? nextState : false;
-    this.applyAttrs();
+    this._update(force);
   }
 
-  applyAttrs() {
-    if (!this.panel || !this.toggleBtn) return;
+  _update(force) {
+    if (!this.panel || !this.toggleBtn) {
+      return;
+    }
 
-    const toggleVisible = this.toggleBtn.offsetParent !== null;
-    const isOpen = toggleVisible ? this.open : false;
+    const toggleVisible = this._isToggleVisible();
+    const nextState = typeof force === "boolean" ? force : !this.open;
+    this.open = toggleVisible ? nextState : false;
+
+    const isOpen = toggleVisible && this.open;
     const shouldHide = toggleVisible ? !isOpen : false;
 
     this.panel.classList.toggle("is-open", isOpen);
     this.panel.setAttribute("aria-hidden", String(shouldHide));
 
     if (this.backdrop) {
-      if (isOpen) {
-        this.backdrop.removeAttribute("hidden");
-      } else {
-        this.backdrop.setAttribute("hidden", "");
-      }
+      this.backdrop.hidden = !isOpen;
       this.backdrop.classList.toggle("is-active", isOpen);
       this.backdrop.setAttribute("aria-hidden", String(!isOpen));
     }
@@ -86,11 +129,17 @@ export default class SidebarController {
     document.body.classList.toggle("sidebar-open", isOpen);
   }
 
-  onKeydown = event => {
-    if (event.key === "Escape" && this.open) {
-      this.toggle(false);
-      this.toggleBtn.focus();
+  _isToggleVisible() {
+    if (!this.toggleBtn) {
+      return false;
     }
-  };
+
+    const style = window.getComputedStyle(this.toggleBtn);
+    return (
+      style.display !== "none" &&
+      style.visibility !== "hidden" &&
+      parseFloat(style.opacity) > 0
+    );
+  }
 }
 
