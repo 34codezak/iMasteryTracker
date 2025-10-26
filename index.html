@@ -6,7 +6,14 @@
   <title>iMasteryTracker — Strategic Learning Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    integrity="sha512-SxCM5lz3FzDyej0t0em6W8kHxq+DXO+S1Sdmf+Ir6cNw2WV3uNqeJgsFTco19dlNmF2mu+QFz0D6iZPIR+w6Kw=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
   <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body>
@@ -15,20 +22,37 @@
       <div class="hero-inner">
         <div class="hero-brand">
           <div class="brand-mark" aria-label="iMasteryTracker">
-            <svg viewBox="0 0 48 48" role="img" aria-hidden="true">
-              <path fill="currentColor" d="M24 4a20 20 0 1 0 20 20A20 20 0 0 0 24 4Zm0 4a16 16 0 0 1 15.3 11.75l-9.8 3.92A6 6 0 0 0 24 20a6 6 0 0 0-5.5 3.67L8.7 19.75A16 16 0 0 1 24 8Zm0 32a16 16 0 0 1-15.3-11.75l9.8-3.92A6 6 0 0 0 24 28a6 6 0 0 0 5.5-3.67l9.8 3.92A16 16 0 0 1 24 40Z"/>
-            </svg>
+            <i class="fa-solid fa-brain" aria-hidden="true"></i>
             <span>iMasteryTracker</span>
           </div>
           <div class="hero-actions">
-            <button id="themeToggle" class="btn ghost" type="button">Toggle theme</button>
-            <button id="exportBtn" class="btn secondary" type="button">Export</button>
+            <button id="themeToggle" class="btn ghost" type="button">
+              <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+              <span>Toggle theme</span>
+            </button>
+            <button id="exportBtn" class="btn secondary" type="button">
+              <i class="fa-solid fa-file-export" aria-hidden="true"></i>
+              <span>Export</span>
+            </button>
             <label class="btn secondary" for="importInput">
-              Import
+              <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+              <span>Import</span>
               <input id="importInput" type="file" accept="application/json" hidden />
             </label>
-            <button id="resetBtn" class="btn danger" type="button">Reset</button>
-            <a style="text-decoration: none;" class="btn ghost" href="https://34codezak.github.io/p_website/" target="_blank" rel="noreferrer noopener">Portfolio</a>
+            <button id="resetBtn" class="btn danger" type="button">
+              <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+              <span>Reset</span>
+            </button>
+            <a
+              style="text-decoration: none;"
+              class="btn ghost"
+              href="https://34codezak.github.io/p_website/"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              <i class="fa-solid fa-id-card-clip" aria-hidden="true"></i>
+              <span>Portfolio</span>
+            </a>
           </div>
         </div>
         <div>
@@ -39,18 +63,22 @@
         </div>
         <div class="hero-metrics">
           <div class="metric-card" data-stat="streams">
+            <i class="fa-solid fa-diagram-project metric-icon" aria-hidden="true"></i>
             <strong>02</strong>
             <span>Learning streams</span>
           </div>
           <div class="metric-card" data-stat="completion">
+            <i class="fa-solid fa-gauge-high metric-icon" aria-hidden="true"></i>
             <strong>68%</strong>
             <span>Milestone momentum</span>
           </div>
           <div class="metric-card" data-stat="milestones">
+            <i class="fa-solid fa-medal metric-icon" aria-hidden="true"></i>
             <strong>04/06</strong>
             <span>Milestones secured</span>
           </div>
           <div class="metric-card" data-stat="habits">
+            <i class="fa-solid fa-fire metric-icon" aria-hidden="true"></i>
             <strong>01</strong>
             <span>Habits completed today</span>
           </div>
@@ -63,7 +91,10 @@
         <div class="section-head">
           <h2>Learning streams</h2>
           <div class="action-bar">
-            <button id="newStreamBtn" class="btn primary" type="button">New stream</button>
+            <button id="newStreamBtn" class="btn primary" type="button">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              <span>New stream</span>
+            </button>
           </div>
         </div>
         <div id="streamList" class="stream-grid" aria-live="polite"></div>
@@ -73,7 +104,10 @@
         <section class="panel">
           <div class="section-head">
             <h2>Daily rituals</h2>
-            <span class="chip">Discipline compounds</span>
+            <span class="chip">
+              <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+              Discipline compounds
+            </span>
           </div>
           <div id="habitList" class="habit-list" aria-live="polite"></div>
         </section>
@@ -82,7 +116,10 @@
           <div class="section-head">
             <h2>Reflection log</h2>
             <div class="action-bar">
-              <button id="newJournalBtn" class="btn ghost" type="button">New entry</button>
+              <button id="newJournalBtn" class="btn ghost" type="button">
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                <span>New entry</span>
+              </button>
             </div>
           </div>
           <div id="journalList" class="journal-list" aria-live="polite"></div>
@@ -96,12 +133,18 @@
           <span class="footer-orb" aria-hidden="true"></span>
           <div class="footer-text">
             <span class="footer-spark">Crafted with care</span>
-            <span class="footer-author">by <strong>AutoMind Tech-360</strong></span>
+            <span class="footer-author">by <a href="https://34codezak.github.io/p_website/" target="_blank" rel="noreferrer noopener"><strong>AutoMind Tech-360</strong></a></span>
           </div>
         </div>
         <nav class="footer-links" aria-label="Creator links">
-          <a href="https://34codezak.github.io/p_website/" target="_blank" rel="noreferrer noopener" class="footer-link">Portfolio</a>
-          <a href="https://github.com/34codezak" target="_blank" rel="noreferrer noopener" class="footer-link">GitHub</a>
+          <a href="https://34codezak.github.io/p_website/" target="_blank" rel="noreferrer noopener" class="footer-link">
+            <i class="fa-solid fa-id-card-clip" aria-hidden="true"></i>
+            <span>Portfolio</span>
+          </a>
+          <a href="https://github.com/34codezak" target="_blank" rel="noreferrer noopener" class="footer-link">
+            <i class="fa-brands fa-github" aria-hidden="true"></i>
+            <span>GitHub</span>
+          </a>
         </nav>
       </div>
     </footer>
