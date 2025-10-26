@@ -41,6 +41,11 @@ const overviewEls = {
 
 const heroSubtext = document.getElementById("heroSubtext");
 
+const sidebarElements = {
+  panel: document.querySelector("[data-sidebar]"),
+  backdrop: document.querySelector(".sidebar-backdrop")
+};
+
 init();
 
 function init() {
@@ -82,6 +87,34 @@ function bindEvents() {
 
   const habitContainer = document.getElementById(selectors.habitList);
   habitContainer?.addEventListener("change", handleHabitToggle);
+
+  bindSidebarControls();
+}
+
+function bindSidebarControls() {
+  const { panel, backdrop } = sidebarElements;
+  if (!panel && !backdrop) return;
+
+  const openers = document.querySelectorAll("[data-sidebar-open]");
+  const closers = document.querySelectorAll("[data-sidebar-close]");
+  const toggles = document.querySelectorAll("[data-sidebar-toggle]");
+
+  openers.forEach(btn => btn.addEventListener("click", () => setSidebarOpen(true)));
+  closers.forEach(btn => btn.addEventListener("click", () => setSidebarOpen(false)));
+  toggles.forEach(btn => btn.addEventListener("click", toggleSidebar));
+  backdrop?.addEventListener("click", () => setSidebarOpen(false));
+}
+
+function setSidebarOpen(isOpen) {
+  const { panel, backdrop } = sidebarElements;
+  panel?.classList.toggle("is-active", isOpen);
+  backdrop?.classList.toggle("is-active", isOpen);
+}
+
+function toggleSidebar() {
+  const { panel, backdrop } = sidebarElements;
+  const isOpen = panel?.classList.contains("is-active") ?? backdrop?.classList.contains("is-active") ?? false;
+  setSidebarOpen(!isOpen);
 }
 
 function renderAll() {
