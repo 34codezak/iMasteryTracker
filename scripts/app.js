@@ -41,6 +41,18 @@ const overviewEls = {
 
 const heroSubtext = document.getElementById("heroSubtext");
 
+const sidebarSelectors = {
+  container: "[data-sidebar]",
+  toggle: "[data-sidebar-toggle]",
+  dismiss: "[data-sidebar-dismiss]",
+  scrim: "[data-sidebar-scrim]"
+};
+
+const desktopMediaQuery =
+  typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(min-width: 1024px)")
+    : undefined;
+
 init();
 
 function init() {
@@ -82,6 +94,8 @@ function bindEvents() {
 
   const habitContainer = document.getElementById(selectors.habitList);
   habitContainer?.addEventListener("change", handleHabitToggle);
+
+  setupSidebarControls();
 }
 
 function renderAll() {
@@ -578,6 +592,51 @@ function handleReset() {
   }
   reset();
   renderAll();
+}
+
+function setupSidebarControls() {
+  const sidebar = document.querySelector(sidebarSelectors.container);
+  if (!sidebar) return;
+
+  const toggle = document.querySelector(sidebarSelectors.toggle);
+  const dismiss = document.querySelector(sidebarSelectors.dismiss);
+  const scrim = document.querySelector(sidebarSelectors.scrim);
+
+  toggle?.addEventListener("click", () => toggleSidebar());
+  [dismiss, scrim].forEach(element => {
+    element?.addEventListener("click", () => toggleSidebar(false));
+  });
+
+  handleMediaChange();
+  if (!desktopMediaQuery) return;
+
+  if (typeof desktopMediaQuery.addEventListener === "function") {
+    desktopMediaQuery.addEventListener("change", handleMediaChange);
+  } else if (typeof desktopMediaQuery.addListener === "function") {
+    desktopMediaQuery.addListener(handleMediaChange);
+  }
+}
+
+function toggleSidebar(force) {
+  const sidebar = document.querySelector(sidebarSelectors.container);
+  if (!sidebar) return;
+
+  const scrim = document.querySelector(sidebarSelectors.scrim);
+  const shouldOpen = typeof force === "boolean" ? force : !sidebar.classList.contains("is-open");
+
+  sidebar.classList.toggle("is-open", shouldOpen);
+  sidebar.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+
+  if (scrim) {
+    scrim.classList.toggle("is-visible", shouldOpen);
+    scrim.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+  }
+
+  document.body.classList.toggle("sidebar-open", shouldOpen);
+}
+
+function handleMediaChange() {
+  toggleSidebar(false);
 }
 
 function resetStreamFormState() {
