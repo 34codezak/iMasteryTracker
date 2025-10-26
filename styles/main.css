@@ -366,6 +366,11 @@ h1, h2, h3, h4 {
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
+.icon-btn[data-action^="edit"],
+.icon-btn[data-action^="remove"] {
+  color: #ff4500;
+}
+
 .icon-btn i[class*="fa-"],
 .icon-btn i.fa-solid,
 .icon-btn i.fa-regular,
