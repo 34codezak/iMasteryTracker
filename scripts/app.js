@@ -53,6 +53,8 @@ const sidebarElements = {
       : null
 };
 
+const messages = createMessageCenter();
+
 const focusableSelectors = [
   "a[href]",
   "area[href]",
@@ -801,8 +803,11 @@ async function handleImport(event) {
     }
     replace(parsed);
     renderAll();
+    messages.success("Workspace imported successfully.");
   } catch (error) {
-    alert("We could not import that file. Please ensure it was exported from iMasteryTracker.");
+    messages.error(
+      "We couldn't import that file. Please ensure it came from an iMasteryTracker export."
+    );
     console.error(error);
   } finally {
     input.value = "";
@@ -837,6 +842,118 @@ function resetStreamFormState() {
   if (milestonesField instanceof HTMLTextAreaElement) {
     milestonesField.value = "";
   }
+}
+
+function createMessageCenter() {
+  const region = document.getElementById("messageTray");
+
+  const icons = {
+    info: "fa-circle-info",
+    success: "fa-circle-check",
+    warning: "fa-triangle-exclamation",
+    error: "fa-circle-exclamation"
+  };
+
+  function removeToast(toast) {
+    if (!toast) return;
+    if (toast.dataset.state === "leaving") return;
+    toast.dataset.state = "leaving";
+    toast.addEventListener(
+      "transitionend",
+      () => {
+        toast.remove();
+      },
+      { once: true }
+    );
+  }
+
+  function show(message, { type = "info", duration = 6000 } = {}) {
+    if (!region) {
+      console.warn("messageTray not found; displaying console message instead.", message);
+      return null;
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast--${type}`;
+    toast.dataset.state = "hidden";
+    toast.role = type === "error" ? "alert" : "status";
+    toast.setAttribute("aria-live", type === "error" ? "assertive" : "polite");
+    toast.setAttribute("aria-atomic", "true");
+
+    const iconWrap = document.createElement("span");
+    iconWrap.className = "toast-icon";
+    const icon = document.createElement("i");
+    icon.className = `fa-solid ${icons[type] ?? icons.info}`;
+    icon.setAttribute("aria-hidden", "true");
+    iconWrap.appendChild(icon);
+
+    const content = document.createElement("div");
+    content.className = "toast-content";
+    content.textContent = String(message);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "toast-close";
+    closeBtn.setAttribute("aria-label", "Dismiss message");
+    const closeIcon = document.createElement("i");
+    closeIcon.className = "fa-solid fa-xmark";
+    closeIcon.setAttribute("aria-hidden", "true");
+    closeBtn.appendChild(closeIcon);
+
+    toast.append(iconWrap, content, closeBtn);
+    region.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        toast.dataset.state = "visible";
+      });
+    });
+
+    let timeoutId = null;
+    if (Number.isFinite(duration) && duration > 0) {
+      timeoutId = window.setTimeout(() => {
+        removeToast(toast);
+      }, duration);
+    }
+
+    closeBtn.addEventListener("click", () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+      removeToast(toast);
+    });
+
+    toast.addEventListener(
+      "pointerenter",
+      () => {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+      },
+      { once: false }
+    );
+
+    toast.addEventListener("pointerleave", () => {
+      if (!timeoutId && Number.isFinite(duration) && duration > 0) {
+        timeoutId = window.setTimeout(() => {
+          removeToast(toast);
+        }, duration);
+      }
+    });
+
+    return toast;
+  }
+
+  const withType = (type) => (message, options = {}) => show(message, { ...options, type });
+
+  return {
+    show,
+    info: withType("info"),
+    success: withType("success"),
+    warning: withType("warning"),
+    error: withType("error")
+  };
 }
 
 function openDialog(dialog) {
