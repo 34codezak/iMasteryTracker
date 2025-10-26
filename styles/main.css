@@ -374,7 +374,7 @@ button, input, textarea, select {
     box-shadow: none;
     width: auto;
     overflow: visible;
-    display: flex !important;
+    display: flex;
     flex-direction: row;
   }
 
