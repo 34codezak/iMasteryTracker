@@ -41,6 +41,12 @@ const overviewEls = {
 
 const heroSubtext = document.getElementById("heroSubtext");
 
+const layout = {
+  heroActions: document.getElementById("heroActions"),
+  menuToggle: document.getElementById("menuToggle"),
+  sidebarBackdrop: document.getElementById("sidebarBackdrop")
+};
+
 init();
 
 function init() {
@@ -82,6 +88,10 @@ function bindEvents() {
 
   const habitContainer = document.getElementById(selectors.habitList);
   habitContainer?.addEventListener("change", handleHabitToggle);
+
+  layout.menuToggle?.addEventListener("click", () => toggleSidebar());
+  layout.sidebarBackdrop?.addEventListener("click", () => toggleSidebar(false));
+  document.addEventListener("keydown", handleGlobalKeydown);
 }
 
 function renderAll() {
@@ -666,4 +676,23 @@ function formatDate(date) {
 
 function applyTheme(theme) {
   document.documentElement.classList.toggle("theme-light", theme === "light");
+}
+
+function toggleSidebar(force) {
+  const panel = layout.heroActions;
+  if (!panel) return;
+  const open = typeof force === "boolean" ? force : !panel.classList.contains("is-open");
+
+  panel.classList.toggle("is-open", open);
+  layout.menuToggle?.setAttribute("aria-expanded", String(open));
+  if (layout.sidebarBackdrop) {
+    layout.sidebarBackdrop.hidden = !open;
+  }
+}
+
+function handleGlobalKeydown(event) {
+  if (event.key !== "Escape") return;
+  if (!layout.heroActions?.classList.contains("is-open")) return;
+  toggleSidebar(false);
+  layout.menuToggle?.focus();
 }
