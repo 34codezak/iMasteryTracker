@@ -158,7 +158,7 @@ function renderOverview(state) {
     (sum, s) => sum + (s.milestones?.filter(m => m.complete).length ?? 0),
     0
   );
-  const completionPct = totalMilestones ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+  const momentumPct = clampPercent(totalMilestones ? (completedMilestones / totalMilestones) * 100 : 0);
   const activeHabits = habits.filter(h => h.completeToday).length;
   const journalCount = journalEntries.length;
   const now = new Date();
@@ -166,14 +166,14 @@ function renderOverview(state) {
   const monthPct = clampPercent(daysInMonth ? (now.getDate() / daysInMonth) * 100 : 0);
 
   if (overviewEls.streams) overviewEls.streams.textContent = String(streams.length).padStart(2, "0");
-  if (overviewEls.monthlyValue) overviewEls.monthlyValue.textContent = `${monthPct}%`;
+  if (overviewEls.monthlyValue) overviewEls.monthlyValue.textContent = `${momentumPct}%`;
   if (overviewEls.monthlyDial) {
-    overviewEls.monthlyDial.style.setProperty("--progress", (monthPct / 100).toFixed(4));
-    overviewEls.monthlyDial.setAttribute("aria-valuenow", String(monthPct));
-    overviewEls.monthlyDial.setAttribute("aria-valuetext", `${monthPct}% of the month complete`);
+    overviewEls.monthlyDial.style.setProperty("--progress", (momentumPct / 100).toFixed(4));
+    overviewEls.monthlyDial.setAttribute("aria-valuenow", String(momentumPct));
+    overviewEls.monthlyDial.setAttribute("aria-valuetext", `${momentumPct}% of milestones complete`);
   }
   if (overviewEls.monthlySubtext) {
-    overviewEls.monthlySubtext.textContent = `Milestone momentum ${completionPct}%`;
+    overviewEls.monthlySubtext.textContent = `Month in motion ${monthPct}%`;
   }
   if (overviewEls.milestones) overviewEls.milestones.textContent = `${completedMilestones}/${totalMilestones || 0}`;
   if (overviewEls.habits) overviewEls.habits.textContent = activeHabits.toString().padStart(2, "0");
@@ -184,7 +184,7 @@ function renderOverview(state) {
     const reflectionLabel = journalCount === 1 ? "" : "s";
     heroSubtext.textContent =
       `Currently guiding ${streams.length} learning stream${streamLabel} with ${totalMilestones} milestone${milestoneLabel} in motion ` +
-      `while ${monthPct}% of the month has unfolded and milestone momentum holds at ${completionPct}%. ` +
+      `while ${monthPct}% of the month has unfolded and milestone momentum holds at ${momentumPct}%. ` +
       `${journalCount} reflection${reflectionLabel} captured.`;
   }
 }
