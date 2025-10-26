@@ -45,16 +45,18 @@ const layout = {
   heroActions: document.getElementById("heroActions"),
   menuToggle: document.getElementById("menuToggle"),
   sidebarBackdrop: document.getElementById("sidebarBackdrop"),
-  mobileMedia: typeof window !== "undefined" && window.matchMedia ? window.matchMedia("(max-width: 720px)") : null
+  mobileMedia: typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia("(max-width: 720px)")
+    : null
+};
+
+const sidebarElements = {
+  panel: layout.heroActions,
+  backdrop: layout.sidebarBackdrop,
+  trigger: layout.menuToggle
 };
 
 const heroSubtext = document.getElementById("heroSubtext");
-
-const layout = {
-  heroActions: document.getElementById("heroActions"),
-  menuToggle: document.getElementById("menuToggle"),
-  sidebarBackdrop: document.getElementById("sidebarBackdrop")
-};
 
 init();
 
@@ -63,7 +65,7 @@ function init() {
   applyTheme(getState().theme ?? "dark");
   renderAll();
   bindEvents();
-  toggleSidebar(false);
+  updateSidebar(false);
 }
 
 function bindEvents() {
@@ -99,14 +101,13 @@ function bindEvents() {
   const habitContainer = document.getElementById(selectors.habitList);
   habitContainer?.addEventListener("change", handleHabitToggle);
 
-  layout.menuToggle?.addEventListener("click", () => toggleSidebar());
-  layout.sidebarBackdrop?.addEventListener("click", () => toggleSidebar(false));
+  document.body.addEventListener("click", handleSidebarClick);
 
   const handleMediaChange = event => {
     if (!event.matches) {
-      toggleSidebar(false);
+      updateSidebar(false);
     } else {
-      toggleSidebar(false);
+      updateSidebar(false);
     }
   };
 
@@ -590,32 +591,54 @@ function syncHabitCompletion() {
 
 function handleGlobalKeydown(event) {
   if (event.key !== "Escape") return;
-  if (layout.heroActions?.classList.contains("is-open")) {
-    toggleSidebar(false);
-    layout.menuToggle?.focus();
+  if (!sidebarElements.panel?.classList.contains("is-open")) return;
+  updateSidebar(false);
+  sidebarElements.trigger?.focus();
+}
+
+function handleSidebarClick(event) {
+  const { panel, backdrop } = sidebarElements;
+  if (!panel) return;
+
+  if (event.target.closest("[data-sidebar-open]")) {
+    updateSidebar(true);
+    return;
+  }
+
+  if (
+    event.target.closest("[data-sidebar-close]") ||
+    (backdrop && event.target.closest(".sidebar-backdrop"))
+  ) {
+    updateSidebar(false);
+    return;
+  }
+
+  if (event.target.closest("[data-sidebar-toggle]")) {
+    const isOpen = panel.classList.contains("is-open");
+    updateSidebar(!isOpen);
   }
 }
 
-function toggleSidebar(force) {
-  const actions = layout.heroActions;
-  if (!actions) return;
+function updateSidebar(open) {
+  const { panel, backdrop, trigger } = sidebarElements;
+  if (!panel) return;
 
   const isMobile = layout.mobileMedia
     ? layout.mobileMedia.matches
     : typeof window !== "undefined"
       ? window.innerWidth <= 720
       : false;
-  const requestedOpen = typeof force === "boolean" ? force : !actions.classList.contains("is-open");
-  const shouldOpen = isMobile ? requestedOpen : false;
-  const icon = layout.menuToggle?.querySelector?.("i");
 
-  actions.classList.toggle("is-open", shouldOpen);
+  const shouldOpen = isMobile ? open : false;
+  const icon = trigger?.querySelector?.("i");
+
+  panel.classList.toggle("is-open", shouldOpen);
   const hidden = isMobile ? !shouldOpen : false;
-  actions.setAttribute("aria-hidden", hidden ? "true" : "false");
+  panel.setAttribute("aria-hidden", hidden ? "true" : "false");
 
-  if (layout.menuToggle) {
-    layout.menuToggle.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
-    layout.menuToggle.setAttribute("aria-label", shouldOpen ? "Close sidebar menu" : "Open sidebar menu");
+  if (trigger) {
+    trigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    trigger.setAttribute("aria-label", shouldOpen ? "Close sidebar menu" : "Open sidebar menu");
   }
 
   if (icon) {
@@ -623,13 +646,9 @@ function toggleSidebar(force) {
     icon.classList.toggle("fa-xmark", shouldOpen);
   }
 
-  if (layout.sidebarBackdrop) {
-    if (shouldOpen) {
-      layout.sidebarBackdrop.removeAttribute("hidden");
-    } else {
-      layout.sidebarBackdrop.setAttribute("hidden", "");
-    }
-    layout.sidebarBackdrop.classList.toggle("is-active", shouldOpen);
+  if (backdrop) {
+    backdrop.classList.toggle("is-active", shouldOpen);
+    backdrop.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
   }
 
   document.body.classList.toggle("sidebar-open", shouldOpen);
@@ -768,23 +787,4 @@ function formatDate(date) {
 
 function applyTheme(theme) {
   document.documentElement.classList.toggle("theme-light", theme === "light");
-}
-
-function toggleSidebar(force) {
-  const panel = layout.heroActions;
-  if (!panel) return;
-  const open = typeof force === "boolean" ? force : !panel.classList.contains("is-open");
-
-  panel.classList.toggle("is-open", open);
-  layout.menuToggle?.setAttribute("aria-expanded", String(open));
-  if (layout.sidebarBackdrop) {
-    layout.sidebarBackdrop.hidden = !open;
-  }
-}
-
-function handleGlobalKeydown(event) {
-  if (event.key !== "Escape") return;
-  if (!layout.heroActions?.classList.contains("is-open")) return;
-  toggleSidebar(false);
-  layout.menuToggle?.focus();
 }
