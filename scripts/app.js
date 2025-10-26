@@ -844,8 +844,30 @@ function resetStreamFormState() {
   }
 }
 
+function ensureToastRegion() {
+  if (typeof document === "undefined") return null;
+
+  let region = document.querySelector("[data-toast-region]");
+  if (region instanceof HTMLElement) {
+    return region;
+  }
+
+  if (!document.body) return null;
+
+  region = document.createElement("div");
+  region.id = "messageTray";
+  region.className = "toast-region";
+  region.setAttribute("role", "region");
+  region.setAttribute("aria-live", "polite");
+  region.setAttribute("aria-atomic", "false");
+  region.dataset.toastRegion = "";
+  document.body.appendChild(region);
+
+  return region;
+}
+
 function createMessageCenter() {
-  const region = document.getElementById("messageTray");
+  const region = ensureToastRegion();
 
   const icons = {
     info: "fa-circle-info",
