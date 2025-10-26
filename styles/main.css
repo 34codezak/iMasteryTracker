@@ -235,7 +235,7 @@ h1, h2, h3, h4 {
 
 .metric-card .metric-icon {
   font-size: 1.35rem;
-  color: var(--accent);
+  color: #d4a017;
   line-height: 1;
 }
 
