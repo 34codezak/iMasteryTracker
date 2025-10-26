@@ -109,6 +109,18 @@ button, input, textarea, select {
   font-family: inherit;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -170,6 +182,39 @@ button, input, textarea, select {
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-actions label.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.menu-toggle {
+  display: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: background 0.25s ease, transform 0.25s ease;
+  position: relative;
+  z-index: 100;
+}
+
+.menu-toggle:hover {
+  background: rgba(250, 204, 21, 0.28);
+  transform: translateY(-1px);
+}
+
+.menu-toggle i[class*="fa-"],
+.menu-toggle i.fa-solid,
+.menu-toggle i.fa-regular,
+.menu-toggle i.fa-brands {
+  font-size: 1.05rem;
 }
 
 .menu-toggle {
@@ -322,6 +367,12 @@ h1, h2, h3, h4 {
   line-height: 1;
 }
 
+.metric-card.metric-progress {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+
 .metric-card strong {
   font-size: clamp(1.6rem, 2.4vw, 2.2rem);
   display: block;
@@ -332,6 +383,80 @@ h1, h2, h3, h4 {
   font-size: 0.85rem;
   margin-top: 0.15rem;
   color: var(--text-muted);
+}
+
+.metric-progress-dial {
+  --progress: 0;
+  width: clamp(4.8rem, 12vw, 5.8rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(
+      var(--accent) calc(var(--progress) * 360deg),
+      rgba(148, 163, 184, 0.22) 0deg
+    );
+  position: relative;
+  transition: background 0.3s ease;
+}
+
+.metric-progress-dial::before {
+  content: "";
+  position: absolute;
+  inset: 0.65rem;
+  border-radius: 50%;
+  background: var(--surface-pop);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+}
+
+.metric-progress-dial__inner {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.metric-progress-dial [data-progress-value] {
+  font-size: clamp(1.35rem, 2.4vw, 2.05rem);
+  font-weight: 700;
+}
+
+.metric-progress-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.metric-progress-label {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.metric-progress-subtext {
+  font-size: 0.78rem;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 5, 0.65);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 98;
+}
+
+.sidebar-backdrop[hidden] {
+  display: none;
+}
+
+.sidebar-backdrop.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.sidebar-open {
+  overflow: hidden;
 }
 
 .wrapper {
@@ -1043,11 +1168,64 @@ textarea {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .menu-toggle {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .hero-brand {
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .hero-actions {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(280px, 82vw);
+    padding: 2.2rem 1.6rem 2rem;
+    background: var(--surface-pop);
+    border-right: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: var(--shadow);
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.75rem;
+    transform: translateX(-105%);
+    transition: transform 0.35s ease;
+    pointer-events: none;
+    z-index: 99;
+    overflow-y: auto;
+  }
+
+  .hero-actions.is-open {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .hero-actions .btn,
+  .hero-actions label.btn {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .hero-actions .btn span,
+  .hero-actions label.btn span {
+    flex: 1;
+    text-align: left;
+  }
 }
 
 @media (max-width: 520px) {
   .hero-brand {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hero-actions {
+    width: min(280px, 86vw);
   }
 }
