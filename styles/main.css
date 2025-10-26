@@ -773,8 +773,8 @@ body.sidebar-open {
 .icon-btn {
   appearance: none;
   border: none;
-  background: linear-gradient(135deg, rgba(192, 132, 252, 0.35), rgba(96, 165, 250, 0.25));
-  color: var(--text);
+  background: linear-gradient(135deg, rgba(192, 132, 252, 0.75), rgba(96, 165, 250, 0.65));
+  color: #fdfcff;
   border-radius: 50%;
   width: 2rem;
   height: 2rem;
@@ -782,8 +782,9 @@ body.sidebar-open {
   place-items: center;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 8px 20px rgba(7, 4, 28, 0.35);
+  box-shadow: 0 10px 24px rgba(7, 4, 28, 0.55);
   backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .icon-btn[data-action^="edit"],
@@ -800,9 +801,9 @@ body.sidebar-open {
 }
 
 .icon-btn:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(192, 132, 252, 0.22));
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.8), rgba(129, 140, 248, 0.75));
   transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 12px 26px rgba(8, 5, 30, 0.45);
+  box-shadow: 0 14px 32px rgba(8, 5, 30, 0.55);
 }
 
 .progress {
