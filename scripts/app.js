@@ -66,6 +66,8 @@ const sidebarFocusTrap = {
   handleFocusin: null
 };
 
+const heroSubtext = document.getElementById("heroSubtext");
+
 init();
 
 function init() {
@@ -644,9 +646,9 @@ function updateSidebar(open) {
     deactivateSidebarFocusTrap();
   }
 
-  if (layout.menuToggle) {
-    layout.menuToggle.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
-    layout.menuToggle.setAttribute("aria-label", shouldOpen ? "Close sidebar menu" : "Open sidebar menu");
+  if (trigger) {
+    trigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    trigger.setAttribute("aria-label", shouldOpen ? "Close sidebar menu" : "Open sidebar menu");
   }
 
   const icon = trigger?.querySelector?.("i");

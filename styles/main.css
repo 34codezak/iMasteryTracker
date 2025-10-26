@@ -600,17 +600,15 @@ h1, h2, h3, h4 {
   background: rgba(5, 5, 5, 0.65);
   backdrop-filter: blur(4px);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
   pointer-events: none;
   z-index: 98;
 }
 
-.sidebar-backdrop[hidden] {
-  display: none;
-}
-
 .sidebar-backdrop.is-active {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
 }
 
