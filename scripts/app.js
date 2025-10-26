@@ -34,9 +34,16 @@ const buttons = {
 
 const overviewEls = {
   streams: document.querySelector("[data-stat='streams'] strong"),
-  completion: document.querySelector("[data-stat='completion'] strong"),
+  completionValue: document.querySelector("[data-stat='completion'] .metric-progress-value"),
+  completionDial: document.querySelector("[data-stat='completion'] .metric-progress-dial"),
   milestones: document.querySelector("[data-stat='milestones'] strong"),
   habits: document.querySelector("[data-stat='habits'] strong")
+};
+
+const layout = {
+  heroActions: document.getElementById("heroActions"),
+  menuToggle: document.getElementById("menuToggle"),
+  sidebarBackdrop: document.getElementById("sidebarBackdrop")
 };
 
 const heroSubtext = document.getElementById("heroSubtext");
@@ -82,6 +89,19 @@ function bindEvents() {
 
   const habitContainer = document.getElementById(selectors.habitList);
   habitContainer?.addEventListener("change", handleHabitToggle);
+
+  if (layout.menuToggle) {
+    layout.menuToggle.addEventListener("click", () => toggleSidebar());
+    document.addEventListener("keydown", handleGlobalKeydown);
+  }
+
+  layout.sidebarBackdrop?.addEventListener("click", () => {
+    toggleSidebar(false);
+    layout.menuToggle?.focus();
+  });
+
+  window.addEventListener("resize", syncSidebarState);
+  syncSidebarState();
 }
 
 function renderAll() {
@@ -106,7 +126,12 @@ function renderOverview(state) {
   const journalCount = journalEntries.length;
 
   if (overviewEls.streams) overviewEls.streams.textContent = String(streams.length).padStart(2, "0");
-  if (overviewEls.completion) overviewEls.completion.textContent = `${completionPct}%`;
+  if (overviewEls.completionValue) overviewEls.completionValue.textContent = `${completionPct}%`;
+  if (overviewEls.completionDial) {
+    overviewEls.completionDial.setAttribute("aria-valuenow", String(completionPct));
+    overviewEls.completionDial.setAttribute("aria-valuetext", `${completionPct}%`);
+    overviewEls.completionDial.style.setProperty("--progress", String(completionPct));
+  }
   if (overviewEls.milestones) overviewEls.milestones.textContent = `${completedMilestones}/${totalMilestones || 0}`;
   if (overviewEls.habits) overviewEls.habits.textContent = activeHabits.toString().padStart(2, "0");
 
@@ -666,4 +691,47 @@ function formatDate(date) {
 
 function applyTheme(theme) {
   document.documentElement.classList.toggle("theme-light", theme === "light");
+}
+
+function syncSidebarState() {
+  if (!layout.heroActions) return;
+  const toggleVisible = layout.menuToggle ? layout.menuToggle.offsetParent !== null : false;
+
+  if (!toggleVisible) {
+    layout.heroActions.classList.remove("is-open");
+    layout.heroActions.setAttribute("aria-hidden", "false");
+    layout.sidebarBackdrop?.classList.remove("is-active");
+    layout.sidebarBackdrop?.setAttribute("aria-hidden", "true");
+    layout.menuToggle?.setAttribute("aria-expanded", "false");
+    return;
+  }
+
+  const isOpen = layout.heroActions.classList.contains("is-open");
+  layout.heroActions.setAttribute("aria-hidden", String(!isOpen));
+  layout.menuToggle?.setAttribute("aria-expanded", String(isOpen));
+  if (layout.sidebarBackdrop) {
+    layout.sidebarBackdrop.classList.toggle("is-active", isOpen);
+    layout.sidebarBackdrop.setAttribute("aria-hidden", String(!isOpen));
+  }
+}
+
+function toggleSidebar(force) {
+  const panel = layout.heroActions;
+  if (!panel) return;
+  const open = typeof force === "boolean" ? force : !panel.classList.contains("is-open");
+
+  panel.classList.toggle("is-open", open);
+  panel.setAttribute("aria-hidden", String(!open));
+  layout.menuToggle?.setAttribute("aria-expanded", String(open));
+  if (layout.sidebarBackdrop) {
+    layout.sidebarBackdrop.classList.toggle("is-active", open);
+    layout.sidebarBackdrop.setAttribute("aria-hidden", String(!open));
+  }
+}
+
+function handleGlobalKeydown(event) {
+  if (event.key !== "Escape") return;
+  if (!layout.heroActions?.classList.contains("is-open")) return;
+  toggleSidebar(false);
+  layout.menuToggle?.focus();
 }

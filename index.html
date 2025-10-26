@@ -25,7 +25,17 @@
             <i class="fa-solid fa-brain" aria-hidden="true"></i>
             <span>iMasteryTracker</span>
           </div>
-          <div class="hero-actions">
+          <button
+            id="menuToggle"
+            class="menu-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="heroActions"
+          >
+            <span class="sr-only">Toggle quick actions</span>
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+          </button>
+          <nav id="heroActions" class="hero-actions" aria-label="Quick actions">
             <button id="themeToggle" class="btn ghost" type="button">
               <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
               <span>Toggle theme</span>
@@ -53,8 +63,9 @@
               <i class="fa-solid fa-id-card-clip" aria-hidden="true"></i>
               <span>Portfolio</span>
             </a>
-          </div>
+          </nav>
         </div>
+        <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
         <div>
           <h1 class="hero-headline">Design a deliberate practice system that keeps your skill growth visible.</h1>
           <p class="hero-subtext" id="heroSubtext">
@@ -67,10 +78,21 @@
             <strong>02</strong>
             <span>Learning streams</span>
           </div>
-          <div class="metric-card" data-stat="completion">
-            <i class="fa-solid fa-gauge-high metric-icon" aria-hidden="true"></i>
-            <strong>68%</strong>
-            <span>Milestone momentum</span>
+          <div class="metric-card metric-card--progress" data-stat="completion">
+            <div
+              class="metric-progress-dial"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="68"
+              aria-labelledby="metricMomentumLabel"
+            >
+              <span class="metric-progress-value">68%</span>
+            </div>
+            <div class="metric-progress-details">
+              <i class="fa-solid fa-gauge-high metric-icon" aria-hidden="true"></i>
+              <span id="metricMomentumLabel">Milestone momentum</span>
+            </div>
           </div>
           <div class="metric-card" data-stat="milestones">
             <i class="fa-solid fa-medal metric-icon" aria-hidden="true"></i>
