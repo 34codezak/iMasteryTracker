@@ -34,8 +34,9 @@ const buttons = {
 
 const overviewEls = {
   streams: document.querySelector("[data-stat='streams'] strong"),
-  completionValue: document.querySelector("[data-stat='completion'] .metric-progress-value"),
-  completionDial: document.querySelector("[data-stat='completion'] .metric-progress-dial"),
+  monthlyValue: document.querySelector("[data-stat='completion'] [data-progress-value]"),
+  monthlyDial: document.querySelector("[data-stat='completion'] .metric-progress-dial"),
+  monthlySubtext: document.querySelector("[data-stat='completion'] [data-progress-subtext]"),
   milestones: document.querySelector("[data-stat='milestones'] strong"),
   habits: document.querySelector("[data-stat='habits'] strong")
 };
@@ -43,10 +44,17 @@ const overviewEls = {
 const layout = {
   heroActions: document.getElementById("heroActions"),
   menuToggle: document.getElementById("menuToggle"),
-  sidebarBackdrop: document.getElementById("sidebarBackdrop")
+  sidebarBackdrop: document.getElementById("sidebarBackdrop"),
+  mobileMedia: typeof window !== "undefined" && window.matchMedia ? window.matchMedia("(max-width: 720px)") : null
 };
 
 const heroSubtext = document.getElementById("heroSubtext");
+
+const layout = {
+  heroActions: document.getElementById("heroActions"),
+  menuToggle: document.getElementById("menuToggle"),
+  sidebarBackdrop: document.getElementById("sidebarBackdrop")
+};
 
 init();
 
@@ -55,6 +63,7 @@ function init() {
   applyTheme(getState().theme ?? "dark");
   renderAll();
   bindEvents();
+  toggleSidebar(false);
 }
 
 function bindEvents() {
@@ -90,18 +99,26 @@ function bindEvents() {
   const habitContainer = document.getElementById(selectors.habitList);
   habitContainer?.addEventListener("change", handleHabitToggle);
 
-  if (layout.menuToggle) {
-    layout.menuToggle.addEventListener("click", () => toggleSidebar());
-    document.addEventListener("keydown", handleGlobalKeydown);
+  layout.menuToggle?.addEventListener("click", () => toggleSidebar());
+  layout.sidebarBackdrop?.addEventListener("click", () => toggleSidebar(false));
+
+  const handleMediaChange = event => {
+    if (!event.matches) {
+      toggleSidebar(false);
+    } else {
+      toggleSidebar(false);
+    }
+  };
+
+  if (layout.mobileMedia) {
+    if (typeof layout.mobileMedia.addEventListener === "function") {
+      layout.mobileMedia.addEventListener("change", handleMediaChange);
+    } else if (typeof layout.mobileMedia.addListener === "function") {
+      layout.mobileMedia.addListener(handleMediaChange);
+    }
   }
 
-  layout.sidebarBackdrop?.addEventListener("click", () => {
-    toggleSidebar(false);
-    layout.menuToggle?.focus();
-  });
-
-  window.addEventListener("resize", syncSidebarState);
-  syncSidebarState();
+  document.addEventListener("keydown", handleGlobalKeydown);
 }
 
 function renderAll() {
@@ -124,19 +141,25 @@ function renderOverview(state) {
   const completionPct = totalMilestones ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
   const activeHabits = habits.filter(h => h.completeToday).length;
   const journalCount = journalEntries.length;
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const monthPct = clampPercent(daysInMonth ? (now.getDate() / daysInMonth) * 100 : 0);
 
   if (overviewEls.streams) overviewEls.streams.textContent = String(streams.length).padStart(2, "0");
-  if (overviewEls.completionValue) overviewEls.completionValue.textContent = `${completionPct}%`;
-  if (overviewEls.completionDial) {
-    overviewEls.completionDial.setAttribute("aria-valuenow", String(completionPct));
-    overviewEls.completionDial.setAttribute("aria-valuetext", `${completionPct}%`);
-    overviewEls.completionDial.style.setProperty("--progress", String(completionPct));
+  if (overviewEls.monthlyValue) overviewEls.monthlyValue.textContent = `${monthPct}%`;
+  if (overviewEls.monthlyDial) {
+    overviewEls.monthlyDial.style.setProperty("--progress", (monthPct / 100).toFixed(4));
+    overviewEls.monthlyDial.setAttribute("aria-valuenow", String(monthPct));
+    overviewEls.monthlyDial.setAttribute("aria-valuetext", `${monthPct}% of the month complete`);
+  }
+  if (overviewEls.monthlySubtext) {
+    overviewEls.monthlySubtext.textContent = `Milestone momentum ${completionPct}%`;
   }
   if (overviewEls.milestones) overviewEls.milestones.textContent = `${completedMilestones}/${totalMilestones || 0}`;
   if (overviewEls.habits) overviewEls.habits.textContent = activeHabits.toString().padStart(2, "0");
 
   if (heroSubtext) {
-    heroSubtext.textContent = `Currently guiding ${streams.length} learning stream${streams.length === 1 ? "" : "s"} with ${totalMilestones} milestone${totalMilestones === 1 ? "" : "s"} in motion and ${journalCount} reflection${journalCount === 1 ? "" : "s"} captured.`;
+    heroSubtext.textContent = `Currently guiding ${streams.length} learning stream${streams.length === 1 ? "" : "s"} with ${totalMilestones} milestone${totalMilestones === 1 ? "" : "s"} in motion while ${monthPct}% of the month has unfolded and milestone momentum holds at ${completionPct}%. ${journalCount} reflection${journalCount === 1 ? "" : "s"} captured.`;
   }
 }
 
@@ -565,6 +588,53 @@ function syncHabitCompletion() {
   });
 }
 
+function handleGlobalKeydown(event) {
+  if (event.key !== "Escape") return;
+  if (layout.heroActions?.classList.contains("is-open")) {
+    toggleSidebar(false);
+    layout.menuToggle?.focus();
+  }
+}
+
+function toggleSidebar(force) {
+  const actions = layout.heroActions;
+  if (!actions) return;
+
+  const isMobile = layout.mobileMedia
+    ? layout.mobileMedia.matches
+    : typeof window !== "undefined"
+      ? window.innerWidth <= 720
+      : false;
+  const requestedOpen = typeof force === "boolean" ? force : !actions.classList.contains("is-open");
+  const shouldOpen = isMobile ? requestedOpen : false;
+  const icon = layout.menuToggle?.querySelector?.("i");
+
+  actions.classList.toggle("is-open", shouldOpen);
+  const hidden = isMobile ? !shouldOpen : false;
+  actions.setAttribute("aria-hidden", hidden ? "true" : "false");
+
+  if (layout.menuToggle) {
+    layout.menuToggle.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    layout.menuToggle.setAttribute("aria-label", shouldOpen ? "Close sidebar menu" : "Open sidebar menu");
+  }
+
+  if (icon) {
+    icon.classList.toggle("fa-bars", !shouldOpen);
+    icon.classList.toggle("fa-xmark", shouldOpen);
+  }
+
+  if (layout.sidebarBackdrop) {
+    if (shouldOpen) {
+      layout.sidebarBackdrop.removeAttribute("hidden");
+    } else {
+      layout.sidebarBackdrop.setAttribute("hidden", "");
+    }
+    layout.sidebarBackdrop.classList.toggle("is-active", shouldOpen);
+  }
+
+  document.body.classList.toggle("sidebar-open", shouldOpen);
+}
+
 function handleExport() {
   const state = getState();
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
@@ -603,6 +673,51 @@ function handleReset() {
   }
   reset();
   renderAll();
+}
+
+function setupSidebarControls() {
+  const sidebar = document.querySelector(sidebarSelectors.container);
+  if (!sidebar) return;
+
+  const toggle = document.querySelector(sidebarSelectors.toggle);
+  const dismiss = document.querySelector(sidebarSelectors.dismiss);
+  const scrim = document.querySelector(sidebarSelectors.scrim);
+
+  toggle?.addEventListener("click", () => toggleSidebar());
+  [dismiss, scrim].forEach(element => {
+    element?.addEventListener("click", () => toggleSidebar(false));
+  });
+
+  handleMediaChange();
+  if (!desktopMediaQuery) return;
+
+  if (typeof desktopMediaQuery.addEventListener === "function") {
+    desktopMediaQuery.addEventListener("change", handleMediaChange);
+  } else if (typeof desktopMediaQuery.addListener === "function") {
+    desktopMediaQuery.addListener(handleMediaChange);
+  }
+}
+
+function toggleSidebar(force) {
+  const sidebar = document.querySelector(sidebarSelectors.container);
+  if (!sidebar) return;
+
+  const scrim = document.querySelector(sidebarSelectors.scrim);
+  const shouldOpen = typeof force === "boolean" ? force : !sidebar.classList.contains("is-open");
+
+  sidebar.classList.toggle("is-open", shouldOpen);
+  sidebar.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+
+  if (scrim) {
+    scrim.classList.toggle("is-visible", shouldOpen);
+    scrim.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+  }
+
+  document.body.classList.toggle("sidebar-open", shouldOpen);
+}
+
+function handleMediaChange() {
+  toggleSidebar(false);
 }
 
 function resetStreamFormState() {
@@ -679,6 +794,13 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function clampPercent(value) {
+  if (!Number.isFinite(value)) return 0;
+  if (value <= 0) return 0;
+  if (value >= 100) return 100;
+  return Math.round(value);
+}
+
 function formatDate(date) {
   const value = date ? new Date(date) : new Date();
   if (Number.isNaN(value.getTime())) return "";
@@ -693,39 +815,15 @@ function applyTheme(theme) {
   document.documentElement.classList.toggle("theme-light", theme === "light");
 }
 
-function syncSidebarState() {
-  if (!layout.heroActions) return;
-  const toggleVisible = layout.menuToggle ? layout.menuToggle.offsetParent !== null : false;
-
-  if (!toggleVisible) {
-    layout.heroActions.classList.remove("is-open");
-    layout.heroActions.setAttribute("aria-hidden", "false");
-    layout.sidebarBackdrop?.classList.remove("is-active");
-    layout.sidebarBackdrop?.setAttribute("aria-hidden", "true");
-    layout.menuToggle?.setAttribute("aria-expanded", "false");
-    return;
-  }
-
-  const isOpen = layout.heroActions.classList.contains("is-open");
-  layout.heroActions.setAttribute("aria-hidden", String(!isOpen));
-  layout.menuToggle?.setAttribute("aria-expanded", String(isOpen));
-  if (layout.sidebarBackdrop) {
-    layout.sidebarBackdrop.classList.toggle("is-active", isOpen);
-    layout.sidebarBackdrop.setAttribute("aria-hidden", String(!isOpen));
-  }
-}
-
 function toggleSidebar(force) {
   const panel = layout.heroActions;
   if (!panel) return;
   const open = typeof force === "boolean" ? force : !panel.classList.contains("is-open");
 
   panel.classList.toggle("is-open", open);
-  panel.setAttribute("aria-hidden", String(!open));
   layout.menuToggle?.setAttribute("aria-expanded", String(open));
   if (layout.sidebarBackdrop) {
-    layout.sidebarBackdrop.classList.toggle("is-active", open);
-    layout.sidebarBackdrop.setAttribute("aria-hidden", String(!open));
+    layout.sidebarBackdrop.hidden = !open;
   }
 }
 
