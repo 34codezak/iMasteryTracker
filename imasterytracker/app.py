@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import reflex as rx
 
+from .api import register_routes
 from .state import DashboardState, Habit, JournalEntry, LearningStream
 
 
@@ -630,3 +631,4 @@ def index() -> rx.Component:
 
 app = rx.App(_state=DashboardState)
 app.add_page(index)
+register_routes(app)
