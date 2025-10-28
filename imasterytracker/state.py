@@ -205,6 +205,10 @@ class DashboardState(rx.State):
         return round((completed / total) * 100)
 
     @rx.var
+    def total_habits(self) -> int:
+        return len(self._get_habits())
+
+    @rx.var
     def milestone_copy(self) -> str:
         streams = self._get_streams()
         completed = sum(stream.milestones_completed for stream in streams)
@@ -223,6 +227,61 @@ class DashboardState(rx.State):
     @rx.var
     def journal_count(self) -> int:
         return len(self._get_journals())
+
+    @rx.var
+    def reflections_this_week(self) -> int:
+        seven_days_ago = dt.datetime.utcnow() - dt.timedelta(days=7)
+        return sum(1 for entry in self._get_journals() if entry.created_at >= seven_days_ago)
+
+    @rx.var
+    def habit_consistency_copy(self) -> str:
+        habits = self._get_habits()
+        if not habits:
+            return "Create a ritual to build your execution rhythm."
+        completed = sum(1 for habit in habits if habit.last_completed_on == self._today())
+        return f"{completed} of {len(habits)} rituals logged today"
+
+    @rx.var
+    def next_stream_message(self) -> str:
+        streams = sorted(self._get_streams(), key=lambda stream: stream.created_at)
+        for stream in streams:
+            if stream.milestones_completed < stream.milestones_total:
+                remaining = stream.milestones_total - stream.milestones_completed
+                label = "milestone" if remaining == 1 else "milestones"
+                return f"{stream.name}: {remaining} {label} to go"
+        return "All learning streams are fully complete."
+
+    @rx.var
+    def milestone_trend_message(self) -> str:
+        completion = self.milestone_completion
+        if completion >= 75:
+            return "Momentum is compounding—keep shipping!"
+        if completion >= 40:
+            return "Solid traction. Review blockers to accelerate."
+        if completion > 0:
+            return "Early progress logged—lean into the next milestone."
+        return "Set your first milestone to start tracking mastery."
+
+    @rx.var
+    def latest_journal_title(self) -> str:
+        entries = self._get_journals()
+        if not entries:
+            return "No reflections yet"
+        return entries[0].title
+
+    @rx.var
+    def latest_journal_preview(self) -> str:
+        entries = self._get_journals()
+        if not entries:
+            return "Capture your latest insight to build your mastery journal."
+        text = entries[0].reflection.strip()
+        if len(text) <= 140:
+            return text
+        return text[:137].rstrip() + "..."
+
+    @rx.var
+    def streams_active_count(self) -> int:
+        return sum(1 for stream in self._get_streams() if stream.milestones_completed < stream.milestones_total)
 
     # ------------------------------------------------------------------
     # Stream events

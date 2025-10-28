@@ -1,31 +1,51 @@
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Callable
 
 import reflex as rx
 
 from .state import DashboardState, Habit, JournalEntry, LearningStream
 
 
-def metric_card(icon: str, label: str, value: rx.Component, helper: str) -> rx.Component:
+def metric_card(
+    icon: str,
+    label: str,
+    value: rx.Component,
+    helper: str,
+    accent: str = "var(--accent-9)",
+) -> rx.Component:
     return rx.card(
         rx.vstack(
             rx.hstack(
-                rx.icon(icon, size=22),
-                rx.text(label, size="3", weight="medium", color="gray.11"),
-                justify="between",
-                width="100%",
+                rx.box(
+                    rx.icon(icon, size=20, color=accent),
+                    background_color="rgba(148, 163, 184, 0.08)",
+                    padding="2",
+                    border_radius="full",
+                ),
+                rx.spacer(),
+                rx.badge("This week", color_scheme="gray", variant="soft"),
                 align="center",
+                width="100%",
             ),
-            value,
+            rx.vstack(
+                rx.text(label, size="2", color="gray.9", weight="medium"),
+                value,
+                gap="1",
+                align="start",
+            ),
+            rx.divider(margin_y="2"),
             rx.text(helper, size="2", color="gray.9"),
-            gap="2",
+            gap="3",
             align="start",
         ),
         variant="surface",
         padding="5",
-        min_height="120px",
+        min_height="140px",
         width="100%",
+        background="linear-gradient(135deg, rgba(15,23,42,0.85), rgba(30,41,59,0.92))",
+        border="1px solid rgba(148, 163, 184, 0.12)",
     )
 
 
@@ -38,7 +58,9 @@ def stream_card(stream: LearningStream) -> rx.Component:
     return rx.card(
         rx.vstack(
             rx.hstack(
-                rx.badge(f"{stream.milestones_total} planned", color_scheme="gray"),
+                rx.badge(
+                    f"{stream.milestones_total} planned", color_scheme="gray", variant="soft"
+                ),
                 rx.spacer(),
                 rx.button(
                     rx.icon("trash-2"),
@@ -48,23 +70,29 @@ def stream_card(stream: LearningStream) -> rx.Component:
                     on_click=lambda: DashboardState.remove_stream(stream.id),
                 ),
             ),
-            rx.heading(stream.name, size="6"),
-            rx.text(stream.focus or "", color="gray.9", size="3"),
+            rx.vstack(
+                rx.hstack(
+                    rx.heading(stream.name, size="6"),
+                    rx.spacer(),
+                    rx.badge(
+                        f"{progress}%", color_scheme="purple", variant="solid"
+                    ),
+                ),
+                rx.text(stream.focus or "", color="gray.9", size="3"),
+                gap="2",
+                align="start",
+            ),
             rx.progress(value=progress, max=100, color_scheme="purple"),
             rx.hstack(
                 rx.badge(
-                    f"{stream.milestones_completed} milestones", color_scheme="purple"
+                    f"{stream.milestones_completed} complete", color_scheme="purple"
+                ),
+                rx.text(
+                    f"{max(stream.milestones_total - stream.milestones_completed, 0)} remaining",
+                    size="2",
+                    color="gray.9",
                 ),
                 rx.spacer(),
-                rx.button(
-                    rx.icon("plus"),
-                    size="2",
-                    variant="solid",
-                    color_scheme="purple",
-                    on_click=lambda: DashboardState.update_stream_progress(
-                        stream.id, 1
-                    ),
-                ),
                 rx.button(
                     rx.icon("minus"),
                     size="2",
@@ -74,8 +102,17 @@ def stream_card(stream: LearningStream) -> rx.Component:
                         stream.id, -1
                     ),
                 ),
+                rx.button(
+                    rx.icon("plus"),
+                    size="2",
+                    variant="solid",
+                    color_scheme="purple",
+                    on_click=lambda: DashboardState.update_stream_progress(
+                        stream.id, 1
+                    ),
+                ),
             ),
-            gap="3",
+            gap="4",
             align="start",
         ),
         style={
@@ -91,7 +128,7 @@ def habit_card(habit: Habit) -> rx.Component:
     return rx.card(
         rx.vstack(
             rx.hstack(
-                rx.icon("alarm-clock", size=18),
+                rx.icon("alarm-clock", size=18, color="var(--cyan-9)"),
                 rx.heading(habit.name, size="4"),
                 rx.spacer(),
                 rx.button(
@@ -104,13 +141,18 @@ def habit_card(habit: Habit) -> rx.Component:
             ),
             rx.text(habit.context or "", size="2", color="gray.9"),
             rx.hstack(
-                rx.badge(habit.cadence, color_scheme="cyan"),
+                rx.badge(habit.cadence, color_scheme="cyan", variant="soft"),
                 rx.spacer(),
                 rx.switch(
                     is_checked=is_complete,
                     on_change=lambda _: DashboardState.toggle_habit(habit.id),
                     color_scheme="cyan",
                 ),
+            ),
+            rx.cond(
+                is_complete,
+                rx.badge("Logged today", color_scheme="cyan", variant="surface"),
+                rx.text("Tap the switch once you've honoured the ritual.", size="2", color="gray.8"),
             ),
             gap="3",
             align="start",
@@ -134,7 +176,12 @@ def journal_card(entry: JournalEntry) -> rx.Component:
                     on_click=lambda: DashboardState.remove_journal_entry(entry.id),
                 ),
             ),
-            rx.text(entry.reflection, size="3", color="gray.9"),
+            rx.text(
+                entry.reflection,
+                size="2",
+                color="gray.9",
+                line_height="1.6",
+            ),
             rx.text(
                 entry.created_at.strftime("%b %d, %Y"),
                 size="2",
@@ -144,6 +191,301 @@ def journal_card(entry: JournalEntry) -> rx.Component:
             align="start",
         ),
         padding="4",
+    )
+
+
+def empty_state(
+    message: str,
+    action_label: str | None = None,
+    action: Callable[[], None] | None = None,
+) -> rx.Component:
+    controls: list[rx.Component] = []
+    if action_label and action is not None:
+        controls.append(
+            rx.button(
+                action_label,
+                on_click=action,
+                variant="soft",
+                color_scheme="purple",
+                size="2",
+            )
+        )
+    return rx.center(
+        rx.vstack(
+            rx.icon("star", size=28, color="var(--gray-11)"),
+            rx.text(message, size="2", color="gray.9", align="center"),
+            *controls,
+            gap="3",
+            align="center",
+        ),
+        min_height="140px",
+        border="1px dashed rgba(148, 163, 184, 0.24)",
+        border_radius="12px",
+        padding="6",
+        background_color="rgba(15, 23, 42, 0.35)",
+    )
+
+
+def streams_section() -> rx.Component:
+    return rx.card(
+        rx.vstack(
+            rx.hstack(
+                rx.heading("Learning streams", size="6"),
+                rx.spacer(),
+                rx.badge(
+                    DashboardState.milestone_trend_message,
+                    color_scheme="purple",
+                    variant="soft",
+                ),
+                rx.button(
+                    "New",
+                    size="2",
+                    on_click=DashboardState.open_stream_modal,
+                    color_scheme="purple",
+                ),
+            ),
+            rx.text(
+                "Focus areas that drive meaningful practice loops.",
+                size="2",
+                color="gray.9",
+            ),
+            rx.cond(
+                DashboardState.total_streams > 0,
+                rx.grid(
+                    rx.foreach(
+                        DashboardState.streams,
+                        lambda stream: stream_card(stream),
+                    ),
+                    columns={"base": 1, "md": 2},
+                    gap="4",
+                    width="100%",
+                ),
+                empty_state(
+                    "Design your first learning stream to anchor deliberate practice.",
+                    "Create stream",
+                    DashboardState.open_stream_modal,
+                ),
+            ),
+            gap="4",
+            align="start",
+        ),
+        padding="5",
+        width="100%",
+    )
+
+
+def habits_section() -> rx.Component:
+    return rx.card(
+        rx.vstack(
+            rx.hstack(
+                rx.heading("Daily rituals", size="6"),
+                rx.spacer(),
+                rx.badge(
+                    DashboardState.habit_consistency_copy,
+                    color_scheme="cyan",
+                    variant="soft",
+                ),
+                rx.button(
+                    "Add",
+                    size="2",
+                    variant="soft",
+                    on_click=DashboardState.open_habit_modal,
+                    color_scheme="cyan",
+                ),
+            ),
+            rx.text(
+                "Micro commitments that compound focus and execution.",
+                size="2",
+                color="gray.9",
+            ),
+            rx.cond(
+                DashboardState.total_habits > 0,
+                rx.vstack(
+                    rx.foreach(
+                        DashboardState.habits,
+                        lambda habit: habit_card(habit),
+                    ),
+                    gap="3",
+                    width="100%",
+                ),
+                empty_state(
+                    "Add your first ritual to lock in a supportive rhythm.",
+                    "Add ritual",
+                    DashboardState.open_habit_modal,
+                ),
+            ),
+            gap="4",
+            align="start",
+        ),
+        padding="5",
+        width="100%",
+    )
+
+
+def journal_section() -> rx.Component:
+    return rx.card(
+        rx.vstack(
+            rx.hstack(
+                rx.heading("Reflection log", size="6"),
+                rx.spacer(),
+                rx.badge(
+                    rx.hstack(
+                        rx.icon("book-open", size=14),
+                        rx.text(DashboardState.journal_count, weight="medium"),
+                        rx.text("entries", size="2"),
+                        align="center",
+                        gap="2",
+                    ),
+                    color_scheme="pink",
+                    variant="soft",
+                ),
+                rx.button(
+                    "New entry",
+                    size="2",
+                    variant="soft",
+                    on_click=DashboardState.open_journal_modal,
+                    color_scheme="pink",
+                ),
+            ),
+            rx.text(
+                "Capture insights, retrospectives, and growth inflection points.",
+                size="2",
+                color="gray.9",
+            ),
+            rx.cond(
+                DashboardState.journal_count > 0,
+                rx.vstack(
+                    rx.foreach(
+                        DashboardState.journal_entries,
+                        lambda entry: journal_card(entry),
+                    ),
+                    gap="3",
+                    width="100%",
+                ),
+                empty_state(
+                    "Log your first reflection to chronicle the mastery journey.",
+                    "Journal entry",
+                    DashboardState.open_journal_modal,
+                ),
+            ),
+            gap="4",
+            align="start",
+        ),
+        padding="5",
+        width="100%",
+    )
+
+
+def momentum_insights() -> rx.Component:
+    return rx.card(
+        rx.vstack(
+            rx.hstack(
+                rx.icon("activity", size=20, color="var(--purple-9)"),
+                rx.heading("Momentum pulse", size="5"),
+                rx.spacer(),
+                rx.badge(
+                    rx.hstack(
+                        rx.icon("calendar", size=14),
+                        rx.text(DashboardState.reflections_this_week, weight="medium"),
+                        rx.text("reflections this week", size="2"),
+                        align="center",
+                        gap="2",
+                    ),
+                    color_scheme="purple",
+                    variant="surface",
+                ),
+            ),
+            rx.text(
+                "A quick read on how your practice engine is performing.",
+                size="2",
+                color="gray.9",
+            ),
+            rx.vstack(
+                rx.hstack(
+                    rx.icon("target", size=16, color="var(--purple-9)"),
+                    rx.text(DashboardState.next_stream_message, size="2", color="gray.9"),
+                    align="center",
+                    gap="2",
+                ),
+                rx.hstack(
+                    rx.icon("clock", size=16, color="var(--cyan-9)"),
+                    rx.text(DashboardState.habit_consistency_copy, size="2", color="gray.9"),
+                    align="center",
+                    gap="2",
+                ),
+                rx.hstack(
+                    rx.icon("star", size=16, color="var(--pink-9)"),
+                    rx.text(DashboardState.latest_journal_title, size="2", color="gray.9"),
+                    align="center",
+                    gap="2",
+                ),
+                rx.text(DashboardState.latest_journal_preview, size="2", color="gray.8"),
+                gap="3",
+                align="start",
+            ),
+            gap="4",
+            align="start",
+        ),
+        padding="5",
+        width="100%",
+    )
+
+
+def practice_playbooks() -> rx.Component:
+    return rx.card(
+        rx.vstack(
+            rx.hstack(
+                rx.icon("notebook", size=20, color="var(--gray-11)"),
+                rx.heading("Practice playbooks", size="5"),
+                rx.spacer(),
+            ),
+            rx.text(
+                "Quick prompts to help you shape impactful iterations.",
+                size="2",
+                color="gray.9",
+            ),
+            rx.accordion.root(
+                rx.accordion.item(
+                    rx.accordion.trigger("Weekly runway"),
+                    rx.accordion.content(
+                        rx.text(
+                            "Clarify the 1-2 milestones that unlock the biggest learning delta this week.",
+                            size="2",
+                            color="gray.9",
+                        )
+                    ),
+                    value="runway",
+                ),
+                rx.accordion.item(
+                    rx.accordion.trigger("Experiment review"),
+                    rx.accordion.content(
+                        rx.text(
+                            "Capture assumptions, signal quality, and the next hypothesis to test.",
+                            size="2",
+                            color="gray.9",
+                        )
+                    ),
+                    value="review",
+                ),
+                rx.accordion.item(
+                    rx.accordion.trigger("Ritual upgrade"),
+                    rx.accordion.content(
+                        rx.text(
+                            "Identify one habit that needs a clearer trigger, richer reward, or shorter loop.",
+                            size="2",
+                            color="gray.9",
+                        )
+                    ),
+                    value="ritual",
+                ),
+                type="single",
+                collapsible=True,
+            ),
+            gap="4",
+            align="start",
+        ),
+        padding="5",
+        width="100%",
     )
 
 
@@ -390,39 +732,62 @@ def journal_modal() -> rx.Component:
 def dashboard_page() -> rx.Component:
     return rx.box(
         rx.vstack(
-            rx.hstack(
-                rx.hstack(
-                    rx.icon("brain", size=26),
-                    rx.heading("iMastery Tracker", size="8"),
-                    align="center",
-                    gap="3",
+            rx.card(
+                rx.vstack(
+                    rx.hstack(
+                        rx.hstack(
+                            rx.icon("brain", size=28, color="var(--purple-9)"),
+                            rx.heading("iMastery Tracker", size="9"),
+                            align="center",
+                            gap="3",
+                        ),
+                        rx.spacer(),
+                        rx.badge(
+                            rx.hstack(
+                                rx.icon("activity", size=14),
+                                rx.text(
+                                    DashboardState.streams_active_count,
+                                    weight="medium",
+                                ),
+                                rx.text("active arcs", size="2"),
+                                align="center",
+                                gap="2",
+                            ),
+                            color_scheme="purple",
+                            variant="surface",
+                        ),
+                    ),
+                    rx.text(
+                        "Design deliberate practice loops, track signals, and celebrate forward motion.",
+                        size="3",
+                        color="gray.9",
+                    ),
+                    rx.hstack(
+                        rx.button(
+                            "New stream",
+                            on_click=DashboardState.open_stream_modal,
+                            color_scheme="purple",
+                        ),
+                        rx.button(
+                            "Add ritual",
+                            on_click=DashboardState.open_habit_modal,
+                            variant="soft",
+                            color_scheme="cyan",
+                        ),
+                        rx.button(
+                            "Journal entry",
+                            on_click=DashboardState.open_journal_modal,
+                            variant="soft",
+                            color_scheme="pink",
+                        ),
+                        gap="3",
+                        wrap="wrap",
+                    ),
+                    gap="4",
+                    align="start",
                 ),
-                rx.spacer(),
-                rx.button(
-                    "New stream",
-                    on_click=DashboardState.open_stream_modal,
-                    color_scheme="purple",
-                ),
-                rx.button(
-                    "Add ritual",
-                    on_click=DashboardState.open_habit_modal,
-                    variant="soft",
-                    color_scheme="cyan",
-                ),
-                rx.button(
-                    "Journal entry",
-                    on_click=DashboardState.open_journal_modal,
-                    variant="soft",
-                    color_scheme="pink",
-                ),
+                padding="6",
                 width="100%",
-                align="center",
-                gap="3",
-            ),
-            rx.text(
-                "Design deliberate practice loops, track signals, and celebrate forward motion.",
-                size="3",
-                color="gray.9",
             ),
             rx.cond(
                 DashboardState.toast_message,
@@ -446,7 +811,8 @@ def dashboard_page() -> rx.Component:
                     "radix-icons:mixer-horizontal",
                     "Learning streams",
                     rx.heading(DashboardState.total_streams, size="8", weight="bold"),
-                    "Active areas of focused growth",
+                    DashboardState.milestone_trend_message,
+                    accent="var(--purple-9)",
                 ),
                 metric_card(
                     "radix-icons:target",
@@ -458,112 +824,44 @@ def dashboard_page() -> rx.Component:
                         gap="2",
                     ),
                     DashboardState.milestone_detail,
+                    accent="var(--amber-9)",
                 ),
                 metric_card(
                     "radix-icons:activity-log",
                     "Rituals completed",
                     rx.heading(DashboardState.habits_completed_today, size="8", weight="bold"),
-                    "Check-ins logged today",
+                    DashboardState.habit_consistency_copy,
+                    accent="var(--cyan-9)",
                 ),
                 metric_card(
                     "radix-icons:notebook",
                     "Reflection entries",
                     rx.heading(DashboardState.journal_count, size="8", weight="bold"),
-                    "Documented insights",
+                    DashboardState.latest_journal_preview,
+                    accent="var(--pink-9)",
                 ),
                 columns={"base": 1, "md": 2, "lg": 4},
                 gap="4",
                 width="100%",
             ),
             rx.flex(
-                rx.card(
-                    rx.vstack(
-                        rx.hstack(
-                            rx.heading("Learning streams", size="6"),
-                            rx.spacer(),
-                            rx.button(
-                                "New",
-                                size="2",
-                                on_click=DashboardState.open_stream_modal,
-                                color_scheme="purple",
-                            ),
-                        ),
-                        rx.grid(
-                            rx.foreach(
-                                DashboardState.streams,
-                                lambda stream: stream_card(stream),
-                            ),
-                            columns={"base": 1, "md": 2},
-                            gap="4",
-                            width="100%",
-                        ),
-                        gap="4",
-                    ),
-                    padding="5",
+                rx.vstack(
+                    streams_section(),
+                    momentum_insights(),
+                    gap="5",
                     width="100%",
                 ),
                 rx.vstack(
-                    rx.card(
-                        rx.vstack(
-                            rx.hstack(
-                                rx.heading("Daily rituals", size="6"),
-                                rx.badge(
-                                    "Discipline compounds",
-                                    color_scheme="cyan",
-                                    variant="soft",
-                                ),
-                                rx.spacer(),
-                                rx.button(
-                                    "Add",
-                                    size="2",
-                                    variant="ghost",
-                                    on_click=DashboardState.open_habit_modal,
-                                ),
-                            ),
-                            rx.vstack(
-                                rx.foreach(
-                                    DashboardState.habits,
-                                    lambda habit: habit_card(habit),
-                                ),
-                                gap="3",
-                                width="100%",
-                            ),
-                            gap="4",
-                        ),
-                        padding="5",
-                        width="100%",
-                    ),
-                    rx.card(
-                        rx.vstack(
-                            rx.hstack(
-                                rx.heading("Reflection log", size="6"),
-                                rx.spacer(),
-                                rx.button(
-                                    "New entry",
-                                    size="2",
-                                    variant="ghost",
-                                    on_click=DashboardState.open_journal_modal,
-                                ),
-                            ),
-                            rx.vstack(
-                                rx.foreach(
-                                    DashboardState.journal_entries,
-                                    lambda entry: journal_card(entry),
-                                ),
-                                gap="3",
-                                width="100%",
-                            ),
-                            gap="4",
-                        ),
-                        padding="5",
-                        width="100%",
-                    ),
+                    habits_section(),
+                    journal_section(),
+                    practice_playbooks(),
                     gap="5",
-                    width="40%",
+                    width="100%",
                 ),
+                direction={"base": "column", "xl": "row"},
+                align="start",
                 gap="5",
                 width="100%",
-                direction={"base": "column", "lg": "row"},
             ),
             stream_modal(),
             habit_modal(),
