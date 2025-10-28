@@ -406,10 +406,10 @@ def habits_section() -> rx.Component:
         ),
         rx.cond(
             DashboardState.total_habits > 0,
-            rx.simple_grid(
+            rx.grid(
                 rx.foreach(DashboardState.habits, habit_card),
-                columns=[1, 1, 2],
-                spacing="4",
+                columns=rx.breakpoints(initial="1", md="2"),
+                gap="4",
                 width="100%",
             ),
             rx.card(
