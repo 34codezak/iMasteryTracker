@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.sqlite3
+.web/
+.venv/
+node_modules/
+.DS_Store
+
+# Reflex generated build artifacts
+imasterytracker/.web/
