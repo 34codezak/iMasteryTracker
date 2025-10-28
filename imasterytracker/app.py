@@ -64,7 +64,7 @@ def hero_section() -> rx.Component:
 def stats_section() -> rx.Component:
     """Key stats for the dashboard."""
 
-    return rx.simple_grid(
+    return rx.grid(
         stat_card(
             "Milestones shipped",
             rx.hstack(
@@ -88,8 +88,8 @@ def stats_section() -> rx.Component:
             ),
             rx.text(DashboardState.habit_consistency_copy, color="gray.10", size="3"),
         ),
-        columns=[1, 1, 3],
-        spacing="5",
+        columns=rx.breakpoints(initial="1", md="3"),
+        gap="5",
         width="100%",
     )
 
