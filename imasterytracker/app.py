@@ -258,9 +258,9 @@ def streams_section() -> rx.Component:
         ),
         rx.cond(
             DashboardState.total_streams > 0,
-            rx.simple_grid(
+            rx.grid(
                 rx.foreach(DashboardState.streams, stream_card),
-                columns=[1, 1, 2],
+                columns= rx.breakpoints(initial="1", md="2"),
                 spacing="4",
                 width="100%",
             ),
@@ -620,5 +620,5 @@ def index() -> rx.Component:
     )
 
 
-app = rx.App(state=DashboardState)
+app = rx.App(_state=DashboardState)
 app.add_page(index)
