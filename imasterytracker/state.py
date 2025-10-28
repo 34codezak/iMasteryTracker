@@ -1,11 +1,26 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import random
 from typing import List
 
 import reflex as rx
+from pydantic import ValidationError
 from sqlmodel import Field, select
+
+from rxconfig import config as app_config
+
+from .schemas import (
+    HabitCreate,
+    HabitRead,
+    JournalEntryCreate,
+    JournalEntryRead,
+    LearningStreamCreate,
+    LearningStreamRead,
+    WorkspaceExport,
+    WorkspaceImport,
+)
 
 
 COLOR_PALETTE = [
@@ -18,6 +33,10 @@ COLOR_PALETTE = [
 ]
 
 
+def _utcnow() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc)
+
+
 class LearningStream(rx.Model, table=True):
     """A deliberate practice focus area."""
 
@@ -27,9 +46,7 @@ class LearningStream(rx.Model, table=True):
     milestones_total: int = 1
     milestones_completed: int = 0
     color: str = "#6366F1"
-    created_at: dt.datetime = Field(
-        default_factory=dt.datetime.utcnow, nullable=False
-    )
+    created_at: dt.datetime = Field(default_factory=_utcnow, nullable=False)
 
 
 class Habit(rx.Model, table=True):
@@ -40,9 +57,7 @@ class Habit(rx.Model, table=True):
     cadence: str = "Daily"
     context: str = ""
     last_completed_on: dt.date | None = Field(default=None, nullable=True)
-    created_at: dt.datetime = Field(
-        default_factory=dt.datetime.utcnow, nullable=False
-    )
+    created_at: dt.datetime = Field(default_factory=_utcnow, nullable=False)
 
 
 class JournalEntry(rx.Model, table=True):
@@ -52,9 +67,7 @@ class JournalEntry(rx.Model, table=True):
     title: str
     reflection: str
     mood: str = "Curious"
-    created_at: dt.datetime = Field(
-        default_factory=dt.datetime.utcnow, nullable=False
-    )
+    created_at: dt.datetime = Field(default_factory=_utcnow, nullable=False)
 
 
 class DashboardState(rx.State):
@@ -98,6 +111,9 @@ class DashboardState(rx.State):
         return dt.date.today()
 
     def _seed_defaults(self) -> None:
+        if app_config.env == "prod" or os.getenv("IMASTERY_SKIP_SEED") == "1":
+            return
+
         with rx.session() as session:
             if not session.exec(select(LearningStream)).first():
                 session.add_all(
@@ -230,7 +246,7 @@ class DashboardState(rx.State):
 
     @rx.var
     def reflections_this_week(self) -> int:
-        seven_days_ago = dt.datetime.utcnow() - dt.timedelta(days=7)
+        seven_days_ago = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=7)
         return sum(1 for entry in self._get_journals() if entry.created_at >= seven_days_ago)
 
     @rx.var
@@ -297,27 +313,24 @@ class DashboardState(rx.State):
         self.stream_milestones_completed = "0"
 
     def add_stream(self):
-        name = self.stream_name.strip()
-        if not name:
-            self.toast_message = "Stream name is required."
-            return
-
         try:
-            total = max(1, int(self.stream_milestones_total))
-            completed = max(0, int(self.stream_milestones_completed))
-        except ValueError:
-            self.toast_message = "Milestones must be numbers."
+            payload = LearningStreamCreate(
+                name=self.stream_name,
+                focus=self.stream_focus,
+                milestones_total=self.stream_milestones_total,
+                milestones_completed=self.stream_milestones_completed,
+            )
+        except ValidationError as error:
+            self.toast_message = self._format_validation_error(error)
             return
-
-        completed = min(completed, total)
 
         with rx.session() as session:
             stream = LearningStream(
-                name=name,
-                focus=self.stream_focus.strip(),
-                milestones_total=total,
-                milestones_completed=completed,
-                color=self._random_color(),
+                name=payload.name,
+                focus=payload.focus,
+                milestones_total=payload.milestones_total,
+                milestones_completed=payload.milestones_completed,
+                color=payload.color or self._random_color(),
             )
             session.add(stream)
             session.commit()
@@ -359,15 +372,21 @@ class DashboardState(rx.State):
         self.habit_context = ""
 
     def add_habit(self):
-        name = self.habit_name.strip()
-        if not name:
-            self.toast_message = "Habit name is required."
+        try:
+            payload = HabitCreate(
+                name=self.habit_name,
+                cadence=self.habit_cadence,
+                context=self.habit_context,
+            )
+        except ValidationError as error:
+            self.toast_message = self._format_validation_error(error)
             return
+
         with rx.session() as session:
             habit = Habit(
-                name=name,
-                cadence=self.habit_cadence.strip() or "Daily",
-                context=self.habit_context.strip(),
+                name=payload.name,
+                cadence=payload.cadence or "Daily",
+                context=payload.context,
             )
             session.add(habit)
             session.commit()
@@ -410,21 +429,94 @@ class DashboardState(rx.State):
         self.journal_mood = "Curious"
 
     def add_journal_entry(self):
-        title = self.journal_title.strip() or "Untitled insight"
-        reflection = self.journal_reflection.strip()
-        if not reflection:
-            self.toast_message = "Reflection cannot be empty."
+        try:
+            payload = JournalEntryCreate(
+                title=self.journal_title or "Untitled insight",
+                reflection=self.journal_reflection,
+                mood=self.journal_mood,
+            )
+        except ValidationError as error:
+            self.toast_message = self._format_validation_error(error)
             return
+
         with rx.session() as session:
             entry = JournalEntry(
-                title=title,
-                reflection=reflection,
-                mood=self.journal_mood.strip() or "Curious",
+                title=payload.title,
+                reflection=payload.reflection,
+                mood=payload.mood or "Curious",
             )
             session.add(entry)
             session.commit()
         self.close_journal_modal()
         self.toast_message = "Reflection captured."
+
+    def import_workspace(self, data: WorkspaceImport | dict):
+        try:
+            payload = (
+                data if isinstance(data, WorkspaceImport) else WorkspaceImport.model_validate(data)
+            )
+        except ValidationError as error:
+            self.toast_message = self._format_validation_error(error)
+            return
+
+        self._replace_workspace(payload)
+        self.toast_message = "Workspace imported successfully."
+
+    def _replace_workspace(self, payload: WorkspaceImport) -> None:
+        with rx.session() as session:
+            for model in (LearningStream, Habit, JournalEntry):
+                for record in session.exec(select(model)):
+                    session.delete(record)
+            session.commit()
+
+            for stream in payload.streams:
+                session.add(
+                    LearningStream(
+                        name=stream.name,
+                        focus=stream.focus,
+                        milestones_total=stream.milestones_total,
+                        milestones_completed=stream.milestones_completed,
+                        color=stream.color or self._random_color(),
+                    )
+                )
+            for habit in payload.habits:
+                session.add(
+                    Habit(
+                        name=habit.name,
+                        cadence=habit.cadence or "Daily",
+                        context=habit.context,
+                    )
+                )
+            for entry in payload.journal_entries:
+                session.add(
+                    JournalEntry(
+                        title=entry.title,
+                        reflection=entry.reflection,
+                        mood=entry.mood or "Curious",
+                    )
+                )
+            session.commit()
+
+    def export_workspace(self) -> WorkspaceExport:
+        with rx.session() as session:
+            streams = [
+                LearningStreamRead.model_validate(stream, from_attributes=True)
+                for stream in session.exec(select(LearningStream))
+            ]
+            habits = [
+                HabitRead.model_validate(habit, from_attributes=True)
+                for habit in session.exec(select(Habit))
+            ]
+            journal_entries = [
+                JournalEntryRead.model_validate(entry, from_attributes=True)
+                for entry in session.exec(select(JournalEntry))
+            ]
+
+        return WorkspaceExport(
+            streams=streams,
+            habits=habits,
+            journal_entries=journal_entries,
+        )
 
     def remove_journal_entry(self, journal_id: int):
         with rx.session() as session:
@@ -437,3 +529,9 @@ class DashboardState(rx.State):
 
     def clear_toast(self):
         self.toast_message = ""
+
+    def _format_validation_error(self, error: ValidationError) -> str:
+        first = error.errors()[0]
+        field = first.get("loc", ["value"])[0]
+        msg = first.get("msg", "Invalid data")
+        return f"{str(field).replace('_', ' ').capitalize()}: {msg}."
