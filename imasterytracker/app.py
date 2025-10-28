@@ -125,7 +125,7 @@ def stream_card(stream: LearningStream) -> rx.Component:
                 ),
             ),
             rx.heading(stream.name, size="6", weight="bold"),
-            rx.text(stream.focus or "", color="gray.9", size="3"),
+            rx.text(stream.focus, color="gray.9", size="3"),
             rx.progress(
                 value=progress,
                 max=100,
@@ -306,7 +306,7 @@ def habit_card(habit: Habit) -> rx.Component:
                     on_click=DashboardState.remove_habit(habit.id),
                 ),
             ),
-            rx.text(habit.context or "", color="gray.9", size="3"),
+            rx.text(habit.context, color="gray.9", size="3"),
             rx.hstack(
             rx.cond(
                 habit.last_completed_on,
