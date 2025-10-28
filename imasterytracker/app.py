@@ -308,11 +308,15 @@ def habit_card(habit: Habit) -> rx.Component:
             ),
             rx.text(habit.context or "", color="gray.9", size="3"),
             rx.hstack(
-            rx.cond(
-                habit.last_completed_on,
-                rx.text(habit.last_completed_on, color="gray.10", size="3"),
-                rx.text("Not logged yet", color="gray.10", size="3"),
-            ),
+                rx.cond(
+                    habit.last_completed_on,
+                    rx.text(
+                        habit.last_completed_on.strftime("%b %d, %Y"),
+                        color="gray.10",
+                        size="3",
+                    ),
+                    rx.text("Not logged yet", color="gray.10", size="3"),
+                ),
                 rx.spacer(),
                 rx.button(
                     "Log today",
@@ -451,7 +455,11 @@ def journal_card(entry: JournalEntry) -> rx.Component:
                 ),
             ),
             rx.text(entry.reflection, color="gray.10", size="3"),
-            rx.text(entry.created_at, color="gray.8", size="2"),
+            rx.text(
+                entry.created_at.strftime("%b %d, %Y %H:%M"),
+                color="gray.8",
+                size="2",
+            ),
             gap="3",
             align="start",
             width="100%",
