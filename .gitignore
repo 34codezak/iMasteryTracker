@@ -13,3 +13,7 @@ assets/external/
 __pycache__/
 imasterytracker/.web/
 node_modules/
+.env
+.env.*
+.vscode/
+.idea/
