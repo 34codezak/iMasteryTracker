@@ -1,11 +1,15 @@
-__pycache__/
+.states
+assets/external/
+# Reflex generated build artifacts
+*.db
+*.py[cod]
 *.pyc
 *.pyo
 *.sqlite3
-.web/
-.venv/
-node_modules/
 .DS_Store
-
-# Reflex generated build artifacts
+.venv/
+.web
+.web/
+__pycache__/
 imasterytracker/.web/
+node_modules/

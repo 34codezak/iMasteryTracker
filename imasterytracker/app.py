@@ -587,4 +587,4 @@ app = rx.App(
     style={"font_family": "'General Sans', sans-serif"},
 )
 app.add_page(dashboard_page, route="/", title="iMastery Tracker Dashboard", on_load=DashboardState.clear_toast)
-app.compile()
+# app.compile()
