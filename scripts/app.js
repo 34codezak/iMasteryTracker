@@ -6,6 +6,7 @@ import {
   createId,
   today
 } from "./state.js";
+import { createErrorMonitor, normaliseError } from "./error-monitor.js";
 
 const selectors = {
   streamList: "streamList",
@@ -54,6 +55,23 @@ const sidebarElements = {
 };
 
 const messages = createMessageCenter();
+const errorMonitor = createErrorMonitor({
+  notify: message => messages.error(message),
+  target: typeof window !== "undefined" ? window : globalThis
+});
+
+if (typeof window !== "undefined") {
+  window.imasteryErrorMonitor = errorMonitor;
+}
+
+function trackError(error, type = "error") {
+  if (!errorMonitor || typeof errorMonitor.record !== "function") {
+    return;
+  }
+  const details = normaliseError(error);
+  details.type = type;
+  errorMonitor.record(details);
+}
 
 const focusableSelectors = [
   "a[href]",
@@ -808,7 +826,7 @@ async function handleImport(event) {
     messages.error(
       "We couldn't import that file. Please ensure it came from an iMasteryTracker export."
     );
-    console.error(error);
+    trackError(error);
   } finally {
     input.value = "";
   }
