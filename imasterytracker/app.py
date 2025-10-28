@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import datetime as dt
+from collections.abc import Callable
+
 import reflex as rx
 
 
@@ -50,19 +55,19 @@ def stream_card(stream: "LearningStream") -> rx.Component:
                 rx.icon_button(
                     "plus",
                     size="2",
-                    variant="solid",
+                    variant="soft",
                     color_scheme="purple",
                     on_click=DashboardState.update_stream_progress(stream.id, 1),
                 ),
                 rx.icon_button(
                     "minus",
                     size="2",
-                    variant="soft",
+                    variant="solid",
                     color_scheme="purple",
                     on_click=DashboardState.update_stream_progress(stream.id, -1),
                 ),
             ),
-            gap="3",
+            gap="4",
             align="start",
             width="100%",
         ),
